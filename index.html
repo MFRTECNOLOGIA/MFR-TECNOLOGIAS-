@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#b71930"><meta name="description" content="MFR Market - gestão de produtos e comparação de preços">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg">
+<link rel="stylesheet" href="style.css"><title>MFR Market</title>
+</head>
+<body>
+<header><div class="brand"><div class="mark">MFR</div><div><b>MFR MARKET</b><small>Gestão inteligente de produtos e preços</small></div></div><span class="offline" id="net">● Offline</span></header>
+<main>
+<nav><button class="tab active" data-tab="home">Início</button><button class="tab" data-tab="products">Produtos</button><button class="tab" data-tab="prices">Preços</button></nav>
+<section id="home" class="view">
+<h1>Bem-vindo ao MFR Market</h1><p class="muted">Cadastre produtos, registre cotações e descubra onde comprar melhor.</p>
+<div class="stats"><article><small>Produtos</small><strong id="countProducts">0</strong></article><article><small>Cotações</small><strong id="countPrices">0</strong></article></div>
+<div class="panel"><h2>Menor preço por produto</h2><div id="bestPrices" class="empty">Cadastre produtos e registre preços para ver a comparação.</div></div>
+<div class="panel"><h2>Comece por aqui</h2><div class="actions"><button class="primary" data-go="products">＋ Cadastrar produto</button><button data-go="prices">＋ Registrar preço</button></div></div>
+</section>
+<section id="products" class="view hidden">
+<h1>Produtos</h1><form id="productForm" class="panel">
+<label>Nome do produto<input id="pName" required maxlength="100" placeholder="Ex.: Papel A4 500 folhas"></label>
+<div class="two"><label>SKU / código<input id="pSku" placeholder="Opcional"></label><label>Categoria<input id="pCategory" placeholder="Ex.: Escritório"></label></div>
+<button class="primary" type="submit">Salvar produto</button></form>
+<div id="productList"></div>
+</section>
+<section id="prices" class="view hidden">
+<h1>Preços e cotações</h1><form id="priceForm" class="panel">
+<label>Produto<select id="priceProduct" required></select></label>
+<label>Loja / fornecedor<input id="store" required placeholder="Ex.: Mercado Livre"></label>
+<div class="two"><label>Preço (R$)<input id="price" required inputmode="decimal" placeholder="129,90"></label><label>Frete (R$)<input id="shipping" inputmode="decimal" placeholder="0,00"></label></div>
+<label>Link do anúncio<input id="url" type="url" placeholder="https://..."></label>
+<label>Observações<input id="notes" placeholder="Prazo, condição, variação..."></label>
+<button class="primary" type="submit">Registrar cotação</button></form>
+<div class="toolbar"><h2>Histórico</h2><button id="exportCsv">Exportar CSV</button></div><div id="priceList"></div>
+</section>
+<footer>MFR Market • Versão inicial • Dados salvos neste dispositivo</footer>
+</main>
+<script src="app.js"></script>
+</body></html>
