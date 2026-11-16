@@ -72,20 +72,23 @@
     </header>
     <nav class="tabs">
       <button class="tab active" data-tab="home">Início</button>
-      <button class="tab" data-tab="products">Produtos</button>
-      <button class="tab" data-tab="prices">Cotações</button>
+      <button id="productsTab" class="tab" data-tab="products">Produtos</button>
+      <button id="pricesTab" class="tab" data-tab="prices">Cotações</button>
+      <button id="reportsTab" class="tab" data-tab="reports">Relatórios</button>
       <button id="adminTab" class="tab hidden" data-tab="admin">Administração</button>
     </nav>
     <main>
       <section id="home" class="view">
-        <h2>Painel geral</h2>
+        <h2 id="homeTitle">Painel geral</h2>
+        <div id="adminOverview" class="dashboard hidden"><article class="panel"><h3>Usuários autorizados</h3><strong id="metricUsers">0</strong></article><article class="panel"><h3>Compradores</h3><strong id="metricBuyers">0</strong></article><article class="panel"><h3>Fornecedores</h3><strong id="metricSuppliers">0</strong></article><article class="panel"><h3>Cotações ativas</h3><strong id="metricQuotes">0</strong></article></div>
+        <section id="notificationsPanel" class="panel"><h3>Central de notificações</h3><div id="notificationsList">Carregando avisos...</div></section>
         <div class="dashboard">
           <article class="panel"><h3>Produtos cadastrados</h3><strong id="countProducts">0</strong></article>
           <article class="panel"><h3>Cotações registradas</h3><strong id="countPrices">0</strong></article>
         </div>
-        <h3>Melhores preços</h3><div id="bestPrices"></div>
-        <button type="button" data-go="products">Cadastrar produto</button>
-        <button type="button" data-go="prices">Registrar cotação</button>
+        <h3 id="bestPricesTitle">Melhores preços</h3><div id="bestPrices"></div>
+        <button id="homeAddProduct" type="button" data-go="products">Cadastrar produto</button>
+        <button id="homeAddQuote" type="button" data-go="prices">Registrar cotação</button>
       </section>
       <section id="products" class="view hidden">
         <h2>Cadastro de produtos</h2>
@@ -97,6 +100,7 @@
           <button type="submit">Salvar produto</button>
         </form>
         <h3>Produtos cadastrados</h3>
+        <label for="productSearch">Pesquisar produto</label><input id="productSearch" type="search" placeholder="Digite o nome do produto...">
         <label for="productCategoryFilter">Filtrar por categoria</label>
         <select id="productCategoryFilter"><option value="">Todas as categorias</option><option value="CARNE">CARNE</option><option value="PAPELARIA">PAPELARIA</option><option value="INSUMOS">INSUMOS</option><option value="HIGIENE E LIMPEZA">HIGIENE E LIMPEZA</option><option value="EMBALAGENS">EMBALAGENS</option></select>
         <div id="productList"></div>
@@ -109,11 +113,15 @@
           <label for="price">Preço do produto</label><input id="price" required type="text" inputmode="decimal" placeholder="0,00">
           <label for="shipping">Frete</label><input id="shipping" type="text" inputmode="decimal" value="0">
           <label for="url">Link do anúncio</label><input id="url" type="url" placeholder="https://">
+          <label for="quoteValidity">Validade da cotação</label><select id="quoteValidity"><option value="2">2 dias</option><option value="4">4 dias</option><option value="7" selected>7 dias</option></select>
           <label for="notes">Observações</label><textarea id="notes" placeholder="Informações adicionais"></textarea>
           <button type="submit">Registrar cotação</button>
         </form>
-        <h3>Histórico de cotações</h3><button id="exportCsv" type="button">Exportar cotações CSV</button><div id="priceList"></div>
+        <h3 id="quoteListTitle">Cotações disponíveis</h3>
+        <label for="quoteSearch">Pesquisar cotação por produto ou fornecedor</label><input id="quoteSearch" type="search" placeholder="Digite para pesquisar...">
+        <button id="exportCsv" type="button">Exportar minhas cotações CSV</button><div id="priceList"></div>
       </section>
+      <section id="reports" class="view hidden"><h2>Relatórios de compras</h2><p class="muted">Estimativa comparativa calculada pela diferença entre a maior e a menor cotação disponível para cada produto. Não representa economia já realizada.</p><div class="dashboard"><article class="panel"><h3>Economia potencial por item</h3><strong id="potentialSavings">R$ 0,00</strong></article><article class="panel"><h3>Produtos com comparação</h3><strong id="comparedProducts">0</strong></article></div><h3>Oportunidades de economia</h3><div id="savingsReport"></div></section>
       <section id="admin" class="view hidden">
         <h2>Administração MFR</h2>
         <p>Somente o administrador principal pode criar, liberar ou bloquear usuários.</p>
