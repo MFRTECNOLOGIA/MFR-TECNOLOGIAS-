@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -18,16 +19,33 @@
 
     <form id="loginForm" class="panel">
       <h2>Acessar plataforma</h2>
-      <label for="loginEmail">Seu e-mail</label>
-      <input id="loginEmail" type="email" placeholder="seu@email.com" required>
-      <button type="submit">Enviar link de acesso</button>
+
+      <label for="loginEmail">E-mail</label>
+      <input
+        id="loginEmail"
+        type="email"
+        placeholder="seu@email.com"
+        autocomplete="username"
+        required
+      >
+
+      <label for="loginPassword">Senha</label>
+      <input
+        id="loginPassword"
+        type="password"
+        placeholder="Digite sua senha"
+        autocomplete="current-password"
+        required
+      >
+
+      <button type="submit">ENTRAR</button>
       <p id="authMessage" class="notice"></p>
     </form>
   </section>
 
   <section id="pendingView" class="hidden panel">
     <h2>Acesso aguardando autorização</h2>
-    <p id="pendingMessage">Seu e-mail ainda não está autorizado.</p>
+    <p id="pendingMessage">Seu acesso ainda não está autorizado.</p>
     <button id="pendingSignOut" type="button">Sair</button>
   </section>
 
