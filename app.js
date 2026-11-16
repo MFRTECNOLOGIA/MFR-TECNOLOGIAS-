@@ -321,7 +321,7 @@ $("accessForm").addEventListener("submit", async e => {
   e.target.reset();
   await loadAccessList();
 
-  alert("E-mail autorizado. A pessoa poderá entrar usando o link enviado pelo MFR Market.");
+  alert("E-mail autorizado. A conta do usuário também precisa ser criada no Supabase Auth para que ele entre com senha.");
 });
 
 async function checkSession(session) {
@@ -371,29 +371,34 @@ async function checkSession(session) {
   }
 }
 
+// LOGIN COM E-MAIL E SENHA
 $("loginForm").addEventListener("submit", async e => {
   e.preventDefault();
 
   const email = $("loginEmail").value.trim().toLowerCase();
+  const password = $("loginPassword").value;
 
-  message("authMessage", "Enviando link de acesso...");
+  if (!email || !password) {
+    return message("authMessage", "Informe seu e-mail e sua senha.", "error");
+  }
 
-  const { error } = await supabaseClient.auth.signInWithOtp({
+  message("authMessage", "Verificando acesso...");
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
     email,
-    options: {
-      emailRedirectTo: window.location.href,
-      shouldCreateUser: true
-    }
+    password
   });
 
   if (error) {
-    return message("authMessage", "Não foi possível enviar: " + error.message, "error");
+    return message(
+      "authMessage",
+      "Não foi possível entrar. Confira seu e-mail e sua senha. " + error.message,
+      "error"
+    );
   }
 
-  message(
-    "authMessage",
-    "Link enviado! Abra o e-mail e clique no link para entrar. Se o endereço ainda não estiver autorizado, o acesso aos dados continuará bloqueado."
-  );
+  $("loginPassword").value = "";
+  await checkSession(data.session);
 });
 
 async function signOut() {
