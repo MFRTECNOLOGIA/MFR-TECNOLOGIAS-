@@ -92,7 +92,7 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
 .whatsapp-link:hover{background:#d71940}
 #supplierProfileForm{max-width:620px}
 
-  </style>
+  \n.request-card{margin:14px 0;padding:18px}.offer-form{margin-top:14px}.offer-form label{margin-top:10px}\n</style>
 </head>
 <body>
   <section id="loginView" class="login-screen">
@@ -157,7 +157,7 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
       <button class="tab active" data-tab="home">Início</button>
       <button id="productsTab" class="tab" data-tab="products">Produtos</button>
       <button id="pricesTab" class="tab" data-tab="prices">Cotações</button>
-      <button id="supplierProfileTab" class="tab hidden" data-tab="supplierProfile">Meu perfil</button>
+      <button id="supplierProfileTab" class="tab hidden" data-tab="supplierProfile">Meu perfil</button>\n      <button id="requestsTab" class="tab hidden" data-tab="requests">Mural de oportunidades</button>
       <button id="reportsTab" class="tab" data-tab="reports">Relatórios</button>
       <button id="adminTab" class="tab hidden" data-tab="admin">Administração</button>
     </nav>
@@ -205,6 +205,22 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
         <label for="quoteSearch">Pesquisar cotação por produto ou fornecedor</label><input id="quoteSearch" type="search" placeholder="Digite para pesquisar...">
         <button id="exportCsv" type="button">Exportar minhas cotações CSV</button><div id="priceList"></div>
       </section>
+      <section id="requests" class="view hidden">
+        <h2>Mural de oportunidades</h2>
+        <p class="muted">Compradores publicam necessidades; fornecedores das categorias correspondentes podem enviar propostas.</p>
+        <form id="requestCreateForm" class="panel">
+          <h3>Publicar o que preciso</h3>
+          <label for="requestProduct">Produto ou item procurado</label><input id="requestProduct" required placeholder="Ex.: Acém bovino sem osso">
+          <label for="requestCategory">Categoria</label><select id="requestCategory" required><option value="">Selecione</option><option>CARNE</option><option>PAPELARIA</option><option>INSUMOS</option><option>HIGIENE E LIMPEZA</option><option>EMBALAGENS</option></select>
+          <label for="requestQuantity">Quantidade</label><input id="requestQuantity" required placeholder="Ex.: 200 kg">
+          <label for="requestSpecs">Especificações</label><textarea id="requestSpecs" placeholder="Detalhes, marca, padrão ou qualidade desejada"></textarea>
+          <label for="requestLocation">Local de entrega</label><input id="requestLocation" required placeholder="Cidade/UF">
+          <label for="requestDate">Preciso até</label><input id="requestDate" type="date">
+          <label for="requestNotes">Observações</label><textarea id="requestNotes" placeholder="Condições e informações adicionais"></textarea>
+          <button type="submit">PUBLICAR SOLICITAÇÃO</button>
+        </form>
+        <h3 id="requestListTitle">Solicitações disponíveis</h3><div id="requestList"></div>
+      </section>
       <section id="supplierProfile" class="view hidden">
         <h2>Meu perfil de fornecedor</h2>
         <p class="muted">Cadastre seu WhatsApp comercial para receber contatos de compradores diretamente pelo MFR Market.</p>
@@ -212,7 +228,13 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
           <label for="supplierWhatsapp">WhatsApp comercial com DDD</label>
           <input id="supplierWhatsapp" type="tel" inputmode="tel" autocomplete="tel" placeholder="(47) 99999-9999" required>
           <small class="muted">Informe o DDD e o número. O código do Brasil será acrescentado automaticamente.</small>
-          <button type="submit">SALVAR WHATSAPP</button>
+          <div id="supplierCategoryBox"><label>Categorias que forneço</label>
+          <label><input type="checkbox" name="supplierCategories" value="CARNE"> CARNE</label>
+          <label><input type="checkbox" name="supplierCategories" value="PAPELARIA"> PAPELARIA</label>
+          <label><input type="checkbox" name="supplierCategories" value="INSUMOS"> INSUMOS</label>
+          <label><input type="checkbox" name="supplierCategories" value="HIGIENE E LIMPEZA"> HIGIENE E LIMPEZA</label>
+          <label><input type="checkbox" name="supplierCategories" value="EMBALAGENS"> EMBALAGENS</label></div>
+          <button type="submit">SALVAR PERFIL</button>
           <p id="supplierProfileMessage" class="notice"></p>
         </form>
       </section>
