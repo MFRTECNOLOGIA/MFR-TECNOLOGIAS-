@@ -4,17 +4,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#171717">
-  <meta name="description" content="MFR Market - Gestão de produtos e comparação de preços">
-  <title>MFR Market</title>
+  <meta name="theme-color" content="#111111">
+  <meta name="description" content="MFR Tecnologia & Ecommerce — MFR Market, gestão de produtos e cotações.">
+  <title>MFR Tecnologia & Ecommerce | MFR Market</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <section id="loginView" class="login-screen">
-    <header>
-      <h1>MFR MARKET</h1>
-      <p>Gestão inteligente de produtos e preços</p>
+    <header class="login-brand">
+      <div class="brand-lockup">
+        <span class="brand-mark">MFR</span>
+        <div class="brand-copy">
+          <strong>MFR TECNOLOGIA <span>&</span> ECOMMERCE</strong>
+          <small>MFR MARKET · GESTÃO INTELIGENTE DE COMPRAS</small>
+        </div>
+      </div>
+      <p>Controle de produtos, fornecedores e cotações em um só lugar.</p>
     </header>
 
     <form id="loginForm" class="panel">
@@ -43,9 +49,12 @@
 
   <section id="appView" class="hidden">
     <header class="user-bar">
-      <div>
-        <h1>MFR MARKET</h1>
-        <small id="signedEmail"></small>
+      <div class="brand-lockup">
+        <span class="brand-mark">MFR</span>
+        <div class="brand-copy">
+          <strong>MFR TECNOLOGIA <span>&</span> ECOMMERCE</strong>
+          <small>MFR MARKET · <span id="signedEmail"></span></small>
+        </div>
       </div>
       <div>
         <span id="net">● Conectado</span>
