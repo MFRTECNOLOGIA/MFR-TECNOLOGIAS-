@@ -9,7 +9,90 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/MFR-TECNOLOGIAS-/style.css?v=20261116-2">
+  <link rel="stylesheet" href="./style.css?v=20261116-3">
+  <style id="mfr-inline-fallback">
+:root{color-scheme:dark;--bg:#09090c;--surface:#17171c;--line:#303039;--text:#f7f7f8;--muted:#a5a5ae;--red:#c90e2d;--bright:#f02043;--dark:#76091e;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}html{min-height:100%;scroll-behavior:smooth}body{margin:0;min-height:100vh;background:#0b0b0e;color:var(--text);font:15px/1.5 Inter,ui-sans-serif,system-ui,sans-serif}
+.login-screen{min-height:100vh;display:grid;grid-template-columns:minmax(0,1.12fr) minmax(390px,.88fr);background:#0b0b0e}
+.login-visual{min-height:100vh;position:relative;display:flex;align-items:center;overflow:hidden;padding:7vh clamp(30px,6vw,100px);background-image:url("https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1800&q=85");background-size:cover;background-position:center}
+.visual-shade{position:absolute;inset:0;background:linear-gradient(90deg,#08090beF 0%,#08090bc9 48%,#08090b9c 100%),linear-gradient(0deg,#09090df2 0%,transparent 45%),linear-gradient(135deg,#b50924aa,transparent 44%)}
+.login-visual:before{content:"";position:absolute;inset:0 auto 0 0;width:9px;background:linear-gradient(#ff294b,#a90022)}
+.visual-content{position:relative;z-index:1;width:min(100%,700px);padding:30px 0}
+.hero-brand{display:flex;align-items:baseline;gap:12px;line-height:1}
+.hero-mark{font-size:clamp(48px,7vw,84px);font-weight:900;font-style:italic;letter-spacing:-.09em;color:#fff;text-shadow:0 5px 25px #0008}
+.hero-market{font-size:clamp(23px,3vw,38px);font-weight:900;font-style:italic;letter-spacing:.06em;color:#ff294b}
+.hero-kicker{margin:9px 0 34px;color:#f3dce1;font-size:11px;font-weight:800;letter-spacing:.2em}
+.role-pills{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px}
+.role-pills span{padding:9px 15px;border:1px solid #ff526b99;border-radius:999px;background:#a80d2b9c;color:white;font-size:12px;font-weight:800;letter-spacing:.04em;backdrop-filter:blur(8px)}
+.visual-content h1{margin:0;color:#fff;font-size:clamp(34px,4.5vw,60px);line-height:1.04;letter-spacing:-.055em;font-weight:850}
+.visual-content h1 em{color:#ff294b;font-style:normal}
+.hero-description{max-width:570px;margin:22px 0 36px;color:#e0e0e4;font-size:16px;line-height:1.7}
+.hero-benefits{display:flex;gap:0;flex-wrap:wrap;border-top:1px solid #ffffff3d;padding-top:20px}
+.hero-benefits div{display:flex;align-items:center;gap:10px;padding:0 20px 0 0;margin-right:20px;border-right:1px solid #ffffff40}
+.hero-benefits div:last-child{border:0;margin:0;padding:0}
+.hero-benefits b{color:#ff3858;font-size:22px;font-weight:900}
+.hero-benefits span{font-size:11px;line-height:1.35;color:#ededf0;font-weight:650}
+.visual-footer{position:absolute;bottom:24px;left:clamp(30px,6vw,100px);z-index:1;color:#bdbdc5;font-size:9px;letter-spacing:.16em;font-weight:700}.visual-footer span{color:#f02b4d;padding:0 8px}
+.login-side{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:45px clamp(24px,5vw,76px);position:relative;background:radial-gradient(ellipse at 100% 0%,#a20d2b2b,transparent 42%),linear-gradient(155deg,#17171c,#0c0c10 75%)}
+.login-side:before{content:"";position:absolute;top:0;right:0;width:100%;height:5px;background:linear-gradient(90deg,#a20d2b,#f02043,#74091e)}
+.login-card{width:min(100%,430px);padding:clamp(25px,3.5vw,42px);border:1px solid #ffffff20;border-radius:22px;background:linear-gradient(145deg,#202027,#141419);box-shadow:0 30px 90px #0009,0 0 55px #bb12301a}
+.login-logo{display:flex;align-items:baseline;gap:8px;margin-bottom:31px;line-height:1}
+.login-logo span{font-size:46px;font-weight:950;font-style:italic;letter-spacing:-.1em;color:white}
+.login-logo b{font-size:20px;letter-spacing:.2em;color:#ff294b}.login-logo i{font-size:10px;color:#aaa;font-style:normal}
+.login-eyebrow{margin:0 0 8px;color:#ff637b;font-size:10px;font-weight:850;letter-spacing:.18em}
+.login-card h2{margin:0;font-size:30px;letter-spacing:-.045em;color:#fff}
+.login-subtitle{margin:8px 0 25px;color:#aaaab4;font-size:13px}
+label{display:block;margin:17px 0 7px;color:#dedee3;font-size:12px;font-weight:750;letter-spacing:.025em}
+.field-wrap{display:flex;align-items:center;gap:10px;min-height:49px;padding:0 14px;border:1px solid #41414b;border-radius:11px;background:#0e0e12;transition:border-color .2s,box-shadow .2s}
+.field-wrap:focus-within{border-color:#f02043;box-shadow:0 0 0 3px #f0204325}
+.field-wrap>span{color:#ff526d;font-size:18px}
+.field-wrap input{flex:1;min-width:0;border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;margin:0;padding:12px 0;color:#fff;font:inherit}
+.field-wrap input::placeholder{color:#777780}
+#loginForm button[type=submit]{width:100%;min-height:50px;margin-top:25px;padding:12px 18px;display:flex;justify-content:center;align-items:center;gap:14px;border:1px solid #fa4965;border-radius:11px;background:linear-gradient(110deg,#ed183d,#a50826);color:white;font:inherit;font-weight:850;letter-spacing:.08em;cursor:pointer;box-shadow:0 10px 25px #bf102d44;transition:transform .2s,filter .2s}
+#loginForm button[type=submit]:hover{transform:translateY(-2px);filter:brightness(1.12)}
+#loginForm button span{font-size:20px}
+.notice{min-height:20px;margin:12px 0 0;color:#b9b9c1;font-size:13px}.notice.error{color:#ff6c80}.notice.success{color:#69d69b}
+.login-security{margin-top:26px;padding-top:18px;border-top:1px solid #ffffff18;color:#a8a8b1;font-size:11px;text-align:center}.login-security span{color:#54d69b;font-weight:900;margin-right:5px}
+.login-copyright{margin-top:25px;color:#74747d;font-size:10px;letter-spacing:.04em;text-align:center}
+.user-bar{min-height:86px;padding:14px max(28px,calc((100% - 1160px)/2));display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;background:#101014ef;border-bottom:1px solid #343039;box-shadow:0 10px 34px #0005;position:sticky;top:0;z-index:5;backdrop-filter:blur(18px)}
+.brand-lockup{display:flex;align-items:center;gap:14px;min-width:0}.brand-mark{display:grid;place-items:center;flex:0 0 54px;height:54px;border-radius:13px;background:linear-gradient(145deg,#f02b4e,#850d27);border:1px solid #ff829366;color:white;font-size:18px;font-weight:950;font-style:italic;letter-spacing:-1px;box-shadow:0 8px 25px #c7193244}
+.brand-copy{min-width:0}.brand-copy strong{display:block;color:#fff;font-size:clamp(14px,2.8vw,18px);line-height:1.2;letter-spacing:.045em;font-weight:850}.brand-copy strong span{color:#f02b4e}.brand-copy small{display:block;margin-top:6px;color:#a7a7af;font-size:9px;font-weight:750;letter-spacing:.14em}
+.user-bar>div:last-child{display:flex;align-items:center;gap:14px}#net{color:#9ee4bd;font-size:12px;font-weight:700}
+main{width:min(100%,1160px);margin:0 auto;padding:34px 28px 64px}#appView{min-height:100vh}
+.tabs{width:min(calc(100% - 44px),1160px);margin:24px auto 0;padding:7px;display:flex;gap:7px;flex-wrap:wrap;background:#141418d9;border:1px solid #303039;border-radius:16px;box-shadow:0 10px 28px #0003}
+button,.tab{border:1px solid #393941;background:#202027;color:#f3f3f5;border-radius:11px;padding:11px 16px;font:inherit;font-weight:700;cursor:pointer;transition:transform .18s,background .18s,border-color .18s}
+button:hover,.tab:hover{border-color:#a82a40;background:#2a1a20;transform:translateY(-1px)}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #f02043;outline-offset:2px}button:disabled{opacity:.55;cursor:wait;transform:none}
+.tab.active,button[type=submit],.primary{color:white;background:linear-gradient(135deg,#ed294c,#a90f30);border-color:#ef4260;box-shadow:0 7px 20px #c7193238}
+.view h2{margin:8px 0 24px;font-size:clamp(25px,4vw,33px);letter-spacing:-.045em;line-height:1.15}.view h2:after{content:"";display:block;width:54px;height:4px;margin-top:13px;border-radius:5px;background:linear-gradient(90deg,#f02b4e,#8f1028)}
+.view h3{margin:30px 0 13px;font-size:16px;color:#f0f0f2}.dashboard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0 30px}
+.panel,.item{background:linear-gradient(145deg,#1a1a20f5,#121216f5);border:1px solid #303039;border-radius:18px;padding:21px;margin-bottom:15px;box-shadow:0 14px 36px #0004}
+.dashboard .panel{position:relative;overflow:hidden;min-height:142px;padding:23px}.dashboard .panel:first-child{border-top:2px solid #e52b4b}.dashboard .panel:last-child{border-top:2px solid #7d3545}.dashboard h3{margin:0 0 16px;color:#b9b9c2;font-size:13px}.dashboard strong{display:block;color:white;font-size:40px;line-height:1;letter-spacing:-.05em}
+form.panel{width:min(100%,700px)}label{display:block;margin:16px 0 7px;color:#d5d5da;font-size:12px;font-weight:750;letter-spacing:.025em}
+input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;padding:12px 14px;border:1px solid #3b3b44;border-radius:11px;background:#0d0d11;color:#f7f7f8;font:inherit;color-scheme:dark}input:focus,select:focus,textarea:focus{border-color:#f02043;outline:none;box-shadow:0 0 0 3px #c7193225}textarea{min-height:104px;resize:vertical}form button[type=submit]{width:100%;margin-top:20px;min-height:48px;letter-spacing:.045em}
+.item{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}.item b{display:block;color:#fff;font-size:14px}.item small{display:block;margin-top:5px;color:#a5a5ae;font-size:12px}.item a{color:#ff7186;text-decoration:none}.item .price{color:#ff5b75;font-weight:850;white-space:nowrap;font-size:16px}.item button{margin-top:10px;padding:7px 11px;font-size:12px;border-color:#642331;color:#ff8292;background:#2b151b}.access-item{align-items:center}
+.empty{padding:22px;color:#96969f;border:1px dashed #41414a;border-radius:14px;background:#141417;text-align:center}#exportCsv{margin:4px 0 17px;border-color:#9e263a}#pendingView{width:min(calc(100% - 32px),520px);margin:12vh auto}#pendingView h2{margin-top:0}#pendingMessage{color:#c5c5cc}#signOut,#pendingSignOut{background:#242429}.hidden{display:none!important}
+@media(max-width:900px){.login-screen{grid-template-columns:1fr}.login-visual{min-height:55vh;padding:48px 28px 65px}.visual-content{padding:15px 0}.visual-content h1{font-size:clamp(35px,8vw,56px)}.hero-description{font-size:14px}.visual-footer{left:28px}.login-side{min-height:620px;padding:42px 20px}.login-card{width:min(100%,470px)}}
+@media(max-width:620px){.login-visual{min-height:590px;padding:36px 22px 70px;background-position:54% center}.hero-kicker{font-size:9px;letter-spacing:.13em;margin-bottom:25px}.role-pills span{font-size:10px;padding:8px 11px}.hero-description{font-size:13px;margin:17px 0 25px}.hero-benefits{gap:12px}.hero-benefits div{padding-right:10px;margin-right:8px}.hero-benefits span{font-size:9px}.visual-footer{left:22px;bottom:18px;font-size:8px}.login-side{min-height:590px;padding:30px 16px}.login-card{padding:25px 22px}.login-logo{margin-bottom:25px}.login-logo span{font-size:40px}.login-card h2{font-size:27px}.user-bar{position:relative;padding:14px 16px}.user-bar>div:last-child{width:100%;justify-content:space-between}.tabs{width:calc(100% - 28px);gap:6px}.tab{flex:1 1 auto;padding:10px 11px;font-size:13px}main{padding:24px 16px 44px}.dashboard{gap:10px}.dashboard .panel{min-height:120px;padding:16px}.dashboard strong{font-size:32px}.item{display:block}.item .price{margin-top:10px}}
+@media(max-width:390px){.dashboard{grid-template-columns:1fr}.brand-copy strong{font-size:13px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+/* Recursos operacionais MFR Market */
+.muted{color:var(--muted);max-width:850px}
+#notificationsPanel{margin:20px 0 28px}
+.notification{padding:12px 14px;border:1px solid #38323a;border-left:3px solid var(--red);border-radius:10px;background:#111116;margin:9px 0;color:#e7e7eb}
+.notification small{display:block;color:var(--muted);margin-top:4px}
+#reports .dashboard{grid-template-columns:repeat(2,minmax(0,1fr))}
+#reports .dashboard strong{font-size:clamp(24px,4vw,38px);overflow-wrap:anywhere}
+.item .quote-meta{color:#a5a5ae;font-size:11px}
+.role-hidden{display:none!important}
+@media(max-width:620px){#reports .dashboard{grid-template-columns:1fr}}
+
+/* Negociação direta pelo WhatsApp */
+.whatsapp-link{display:inline-flex;align-items:center;justify-content:center;margin-top:12px;padding:10px 14px;border-radius:10px;background:#a90f30;border:1px solid #f04460;color:#fff!important;font-size:11px;font-weight:850;letter-spacing:.04em;text-decoration:none;box-shadow:0 7px 18px #c7193238}
+.whatsapp-link:hover{background:#d71940}
+#supplierProfileForm{max-width:620px}
+
+  </style>
 </head>
 <body>
   <section id="loginView" class="login-screen">
