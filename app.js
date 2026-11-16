@@ -1,8 +1,13 @@
+
+// ==========================================
 // MFR MARKET - INTEGRACAO SUPABASE
+// ==========================================
+
 const SUPABASE_URL = "https://cuvyknvnkjcqnzpcorap.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_nGJ-UEn8kzof785jGuKFCA_N3g1RZux";
 
 const ADMIN_EMAIL = "xavofelipe@gmail.com";
+
 const $ = id => document.getElementById(id);
 
 const supabaseClient = window.supabase.createClient(
@@ -11,6 +16,7 @@ const supabaseClient = window.supabase.createClient(
 );
 
 let currentUser = null;
+let currentRole = null;
 let isAdmin = false;
 let products = [];
 let prices = [];
@@ -35,6 +41,7 @@ const num = s => Number(
 function message(id, text, kind = "") {
   const el = $(id);
   if (!el) return;
+
   el.textContent = text;
   el.className = `notice ${kind}`;
 }
@@ -46,29 +53,44 @@ function show(view) {
 }
 
 function tab(name) {
-  document.querySelectorAll(".view").forEach(x =>
-    x.classList.toggle("hidden", x.id !== name)
-  );
+  if (name === "admin" && !isAdmin) return;
 
-  document.querySelectorAll(".tab").forEach(x =>
-    x.classList.toggle("active", x.dataset.tab === name)
-  );
+  document.querySelectorAll(".view").forEach(x => {
+    x.classList.toggle("hidden", x.id !== name);
+  });
 
-  if (name === "admin" && isAdmin) loadAccessList();
+  document.querySelectorAll(".tab").forEach(x => {
+    x.classList.toggle("active", x.dataset.tab === name);
+  });
+
+  if (name === "admin" && isAdmin) {
+    loadAccessList();
+  }
 }
 
-document.querySelectorAll("[data-tab]").forEach(b =>
-  b.addEventListener("click", () => tab(b.dataset.tab))
-);
+document.querySelectorAll("[data-tab]").forEach(b => {
+  b.addEventListener("click", () => tab(b.dataset.tab));
+});
 
-document.querySelectorAll("[data-go]").forEach(b =>
-  b.addEventListener("click", () => tab(b.dataset.go))
-);
+document.querySelectorAll("[data-go]").forEach(b => {
+  b.addEventListener("click", () => tab(b.dataset.go));
+});
+
+// ==========================================
+// PRODUTOS E COTACOES
+// ==========================================
 
 async function loadData() {
   const [pRes, qRes] = await Promise.all([
-    supabaseClient.from("products").select("*").order("created_at", { ascending: false }),
-    supabaseClient.from("prices").select("*").order("created_at", { ascending: false })
+    supabaseClient
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: false }),
+
+    supabaseClient
+      .from("prices")
+      .select("*")
+      .order("created_at", { ascending: false })
   ]);
 
   if (pRes.error) throw pRes.error;
@@ -98,8 +120,10 @@ function render() {
       <div class="item">
         <div>
           <b>${esc(p.name)}</b>
-          <small>${esc(p.category || "Sem categoria")}
-          ${p.sku ? " • " + esc(p.sku) : ""}</small>
+          <small>
+            ${esc(p.category || "Sem categoria")}
+            ${p.sku ? " • " + esc(p.sku) : ""}
+          </small>
           <button data-del-product="${p.id}">Excluir</button>
         </div>
       </div>
@@ -114,11 +138,22 @@ function render() {
         <div class="item">
           <div>
             <b>${esc(p?.name || "Produto removido")}</b>
-            <small>${esc(q.store)} • ${new Date(q.created).toLocaleString("pt-BR")}</small>
-            ${q.url ? `<small><a href="${esc(q.url)}" target="_blank" rel="noopener">Abrir anúncio</a></small>` : ""}
+            <small>
+              ${esc(q.store)} •
+              ${new Date(q.created).toLocaleString("pt-BR")}
+            </small>
+
+            ${q.url
+              ? `<small><a href="${esc(q.url)}" target="_blank" rel="noopener">Abrir anúncio</a></small>`
+              : ""}
+
             ${q.notes ? `<small>${esc(q.notes)}</small>` : ""}
-            <button data-del-price="${q.id}">Excluir cotação</button>
+
+            <button data-del-price="${q.id}">
+              Excluir cotação
+            </button>
           </div>
+
           <div class="price">
             ${money(Number(q.price) + Number(q.shipping))}
             <small>total c/ frete</small>
@@ -129,7 +164,10 @@ function render() {
     : '<div class="empty">Nenhuma cotação registrada.</div>';
 
   const best = products
-    .map(p => ({ p, qs: prices.filter(q => q.productId === p.id) }))
+    .map(p => ({
+      p,
+      qs: prices.filter(q => q.productId === p.id)
+    }))
     .filter(x => x.qs.length)
     .map(x => ({
       ...x,
@@ -162,7 +200,10 @@ function render() {
         .delete()
         .eq("id", b.dataset.delProduct);
 
-      if (error) return alert("Erro: " + error.message);
+      if (error) {
+        return alert("Erro: " + error.message);
+      }
+
       await loadData();
     };
   });
@@ -176,11 +217,18 @@ function render() {
         .delete()
         .eq("id", b.dataset.delPrice);
 
-      if (error) return alert("Erro: " + error.message);
+      if (error) {
+        return alert("Erro: " + error.message);
+      }
+
       await loadData();
     };
   });
 }
+
+// ==========================================
+// CADASTRAR PRODUTO
+// ==========================================
 
 $("productForm").addEventListener("submit", async e => {
   e.preventDefault();
@@ -196,12 +244,20 @@ $("productForm").addEventListener("submit", async e => {
     .from("products")
     .insert(row);
 
-  if (error) return alert("Erro ao cadastrar produto: " + error.message);
+  if (error) {
+    return alert("Erro ao cadastrar produto: " + error.message);
+  }
 
   e.target.reset();
+
   await loadData();
+
   alert("Produto cadastrado na nuvem!");
 });
+
+// ==========================================
+// CADASTRAR COTACAO
+// ==========================================
 
 $("priceForm").addEventListener("submit", async e => {
   e.preventDefault();
@@ -224,16 +280,25 @@ $("priceForm").addEventListener("submit", async e => {
     .from("prices")
     .insert(row);
 
-  if (error) return alert("Erro ao registrar cotação: " + error.message);
+  if (error) {
+    return alert("Erro ao registrar cotação: " + error.message);
+  }
 
   e.target.reset();
+
   await loadData();
+
   alert("Cotação registrada na nuvem!");
 });
+
+// ==========================================
+// EXPORTAR CSV
+// ==========================================
 
 $("exportCsv").addEventListener("click", () => {
   const rows = [
     ["Produto", "Loja", "Preço", "Frete", "Total", "Link", "Observações"],
+
     ...prices.map(q => [
       products.find(p => p.id === q.productId)?.name || "",
       q.store,
@@ -250,42 +315,77 @@ $("exportCsv").addEventListener("click", () => {
   ).join("\n");
 
   const a = document.createElement("a");
+
   a.href = URL.createObjectURL(
-    new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" })
+    new Blob(["\ufeff" + csv], {
+      type: "text/csv;charset=utf-8"
+    })
   );
+
   a.download = "mfr-market-cotacoes.csv";
   a.click();
+
   URL.revokeObjectURL(a.href);
 });
 
+// ==========================================
+// ADMINISTRACAO DE USUARIOS
+// ==========================================
+
 async function loadAccessList() {
+  if (!isAdmin) return;
+
   const { data, error } = await supabaseClient
     .from("mfr_access")
-    .select("email,approved,role,created_at")
+    .select("email,name,approved,role,created_at")
     .order("created_at");
 
   if (error) {
-    $("accessList").textContent = "Erro ao carregar usuários: " + error.message;
+    $("accessList").textContent =
+      "Erro ao carregar usuários: " + error.message;
     return;
   }
 
-  $("accessList").innerHTML = (data || []).map(u => `
-    <div class="item access-item">
-      <div>
-        <b>${esc(u.email)}</b>
-        <small>${u.role === "admin" ? "Administrador" : "Usuário"}
-        • ${u.approved ? "Aprovado" : "Bloqueado"}</small>
+  $("accessList").innerHTML = (data || []).map(u => {
+    const roleName = {
+      admin: "Administrador",
+      comprador: "Comprador",
+      fornecedor: "Fornecedor",
+      user: "Usuário antigo"
+    }[u.role] || u.role;
+
+    const principal =
+      u.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
+    return `
+      <div class="item access-item">
+        <div>
+          <b>${esc(u.name || "Nome não informado")}</b>
+          <small>${esc(u.email)}</small>
+          <small>
+            Perfil: ${esc(roleName)} •
+            ${u.approved ? "Aprovado" : "Bloqueado"}
+          </small>
+        </div>
+
+        ${principal
+          ? "<strong>Administrador principal</strong>"
+          : `
+            <button
+              data-toggle-access="${esc(u.email)}"
+              data-approved="${u.approved}">
+              ${u.approved ? "Bloquear" : "Liberar"}
+            </button>
+          `
+        }
       </div>
-      ${u.email.toLowerCase() === ADMIN_EMAIL
-        ? "<strong>Administrador principal</strong>"
-        : `<button data-toggle-access="${esc(u.email)}" data-approved="${u.approved}">
-          ${u.approved ? "Bloquear" : "Liberar"}
-        </button>`}
-    </div>
-  `).join("") || '<div class="empty">Nenhum usuário cadastrado.</div>';
+    `;
+  }).join("") || '<div class="empty">Nenhum usuário cadastrado.</div>';
 
   document.querySelectorAll("[data-toggle-access]").forEach(b => {
     b.onclick = async () => {
+      if (!isAdmin) return;
+
       const next = b.dataset.approved !== "true";
 
       const { error: updateError } = await supabaseClient
@@ -293,42 +393,126 @@ async function loadAccessList() {
         .update({ approved: next })
         .eq("email", b.dataset.toggleAccess);
 
-      if (updateError) return alert("Erro: " + updateError.message);
+      if (updateError) {
+        return alert("Erro ao atualizar usuário: " + updateError.message);
+      }
 
-      loadAccessList();
+      await loadAccessList();
     };
   });
 }
 
+// ==========================================
+// CRIAR COMPRADOR OU FORNECEDOR
+// ==========================================
+
 $("accessForm").addEventListener("submit", async e => {
   e.preventDefault();
 
-  const email = $("accessEmail").value.trim().toLowerCase();
-
-  if (!email || email === ADMIN_EMAIL) {
-    return alert("Informe outro e-mail válido.");
+  if (!isAdmin) {
+    return message(
+      "createUserMessage",
+      "Somente o administrador pode criar usuários.",
+      "error"
+    );
   }
 
-  const { error } = await supabaseClient
-    .from("mfr_access")
-    .upsert(
-      { email, approved: true, role: "user" },
-      { onConflict: "email" }
+  const name = $("accessName").value.trim();
+  const email = $("accessEmail").value.trim().toLowerCase();
+  const password = $("accessPassword").value;
+  const role = $("accessRole").value;
+
+  if (!name || !email || !password) {
+    return message(
+      "createUserMessage",
+      "Preencha todos os campos.",
+      "error"
+    );
+  }
+
+  if (password.length < 8) {
+    return message(
+      "createUserMessage",
+      "A senha precisa ter pelo menos 8 caracteres.",
+      "error"
+    );
+  }
+
+  if (!["comprador", "fornecedor"].includes(role)) {
+    return message(
+      "createUserMessage",
+      "Perfil inválido.",
+      "error"
+    );
+  }
+
+  const button = e.target.querySelector('button[type="submit"]');
+
+  button.disabled = true;
+  button.textContent = "CRIANDO...";
+
+  message("createUserMessage", "Criando usuário...");
+
+  try {
+    const { data, error } = await supabaseClient.functions.invoke(
+      "mfr-create-user",
+      {
+        body: {
+          name,
+          email,
+          password,
+          role
+        }
+      }
     );
 
-  if (error) return alert("Erro ao autorizar e-mail: " + error.message);
+    if (error) {
+      throw error;
+    }
 
-  e.target.reset();
-  await loadAccessList();
+    if (data?.error) {
+      throw new Error(data.error);
+    }
 
-  alert("E-mail autorizado. A conta do usuário também precisa ser criada no Supabase Auth para que ele entre com senha.");
+    e.target.reset();
+
+    message(
+      "createUserMessage",
+      "Usuário criado com sucesso!",
+      "success"
+    );
+
+    await loadAccessList();
+
+  } catch (err) {
+    console.error("Erro ao criar usuário:", err);
+
+    message(
+      "createUserMessage",
+      "Não foi possível criar o usuário: " +
+      (err.message || "Erro desconhecido."),
+      "error"
+    );
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "CRIAR USUÁRIO";
+  }
 });
+
+// ==========================================
+// VERIFICAR SESSAO E PERMISSOES
+// ==========================================
 
 async function checkSession(session) {
   currentUser = session?.user || null;
 
   if (!currentUser) {
     isAdmin = false;
+    currentRole = null;
+
+    $("adminTab").classList.add("hidden");
+
     show("loginView");
     return;
   }
@@ -337,50 +521,86 @@ async function checkSession(session) {
 
   const { data: access, error } = await supabaseClient
     .from("mfr_access")
-    .select("approved,role,email")
+    .select("approved,role,email,name")
     .eq("email", (currentUser.email || "").toLowerCase())
     .maybeSingle();
 
   if (error) {
-    show("pendingView");
-    message("pendingMessage", "Não foi possível verificar a autorização: " + error.message, "error");
-    return;
-  }
-
-  if (!access || !access.approved ||
-      (access.role !== "admin" && access.role !== "user")) {
     isAdmin = false;
+
     show("pendingView");
+
+    message(
+      "pendingMessage",
+      "Não foi possível verificar a autorização: " + error.message,
+      "error"
+    );
+
     return;
   }
 
-  isAdmin = currentUser.email.toLowerCase() === ADMIN_EMAIL &&
-            access.role === "admin";
+  const allowedRoles = [
+    "admin",
+    "user",
+    "comprador",
+    "fornecedor"
+  ];
+
+  if (
+    !access ||
+    !access.approved ||
+    !allowedRoles.includes(access.role)
+  ) {
+    isAdmin = false;
+    currentRole = null;
+
+    $("adminTab").classList.add("hidden");
+
+    show("pendingView");
+
+    message(
+      "pendingMessage",
+      "Seu acesso ainda não está autorizado ou foi bloqueado."
+    );
+
+    return;
+  }
+
+  currentRole = access.role;
+
+  isAdmin =
+    currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() &&
+    access.role === "admin";
 
   $("adminTab").classList.toggle("hidden", !isAdmin);
 
   show("appView");
+
   tab("home");
 
   try {
     await loadData();
+
     $("net").textContent = "● Online";
+
   } catch (err) {
     $("net").textContent = "● Erro de conexão";
-    alert("Erro ao carregar dados do MFR Market: " + err.message);
+
+    alert(
+      "Erro ao carregar dados do MFR Market: " + err.message
+    );
   }
 }
 
-// LOGIN COM E-MAIL E SENHA
+// ==========================================
+// LOGIN COM EMAIL E SENHA
+// ==========================================
+
 $("loginForm").addEventListener("submit", async e => {
   e.preventDefault();
 
   const email = $("loginEmail").value.trim().toLowerCase();
   const password = $("loginPassword").value;
-
-  if (!email || !password) {
-    return message("authMessage", "Informe seu e-mail e sua senha.", "error");
-  }
 
   message("authMessage", "Verificando acesso...");
 
@@ -392,37 +612,62 @@ $("loginForm").addEventListener("submit", async e => {
   if (error) {
     return message(
       "authMessage",
-      "Não foi possível entrar. Confira seu e-mail e sua senha. " + error.message,
+      "E-mail ou senha incorretos: " + error.message,
       "error"
     );
   }
 
-  $("loginPassword").value = "";
   await checkSession(data.session);
 });
 
+// ==========================================
+// SAIR DA CONTA
+// ==========================================
+
 async function signOut() {
   await supabaseClient.auth.signOut();
+
   currentUser = null;
+  currentRole = null;
   isAdmin = false;
+
+  $("adminTab").classList.add("hidden");
+
   show("loginView");
 }
 
 $("signOut").addEventListener("click", signOut);
 $("pendingSignOut").addEventListener("click", signOut);
 
-$("net").textContent = navigator.onLine ? "● Conectado" : "● Offline";
+// ==========================================
+// CONEXAO
+// ==========================================
 
-window.addEventListener("online", () =>
-  $("net").textContent = "● Conectado"
-);
+$("net").textContent = navigator.onLine
+  ? "● Conectado"
+  : "● Offline";
 
-window.addEventListener("offline", () =>
-  $("net").textContent = "● Offline"
-);
+window.addEventListener("online", () => {
+  $("net").textContent = "● Conectado";
+});
+
+window.addEventListener("offline", () => {
+  $("net").textContent = "● Offline";
+});
+
+// ==========================================
+// INICIALIZACAO
+// ==========================================
 
 (async function init() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
+  const {
+    data: { session },
+    error
+  } = await supabaseClient.auth.getSession();
+
+  if (error) {
+    console.error("Erro ao recuperar sessão:", error);
+  }
 
   await checkSession(session);
 
