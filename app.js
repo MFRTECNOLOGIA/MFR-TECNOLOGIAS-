@@ -12,7 +12,7 @@ function message(id,text,kind=""){const el=$(id);if(el){el.textContent=text;el.c
 function show(view){["loginView","pendingView","appView"].forEach(id=>$(id).classList.toggle("hidden",id!==view))}
 function allowedTabs(){
   const buyer=currentRole==="comprador", supplier=currentRole==="fornecedor";
-  $("supplierProfileTab").classList.toggle("hidden",!supplier);
+  $("supplierProfileTab").classList.toggle("hidden",!(supplier||isAdmin));
   $("requestsTab").classList.toggle("hidden",isAdmin);
   $("requestCreateForm").classList.toggle("hidden",!buyer);
   $("supplierCategoryBox").classList.toggle("hidden",!supplier);
@@ -34,7 +34,7 @@ function tab(name){
   if(name==="admin"&&!isAdmin)return;
   if(name==="products"&&!isAdmin)return;
   if(name==="reports"&&currentRole==="fornecedor")return;
-  if(name==="supplierProfile"&&currentRole!=="fornecedor")return;
+  if(name==="supplierProfile"&&currentRole!=="fornecedor"&&!isAdmin)return;
   if(name==="requests"&&isAdmin)return;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("hidden",x.id!==name));
   document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));
@@ -84,7 +84,7 @@ function render(){
     const contact=supplierProfiles.find(x=>x.user_id===q.created_by)?.whatsapp||"";
     const whatsappDigits=contact.replace(/[^0-9]/g,"");
     const messageText="Olá! Tenho interesse na cotação do produto "+(p?.name||"Produto")+". Vi sua oferta na loja "+q.store+". Preço: "+money(q.price)+". Frete: "+money(q.shipping)+". Total: "+money(total(q))+". Podemos negociar?";
-    const whatsappAction=buyerMode()?(whatsappDigits?'<a class="whatsapp-link" href="https://wa.me/55'+whatsappDigits+'?text='+encodeURIComponent(messageText)+'" target="_blank" rel="noopener noreferrer">CHAT COM O VENDEDOR • WHATSAPP</a><small class="muted">WhatsApp: +55'+whatsappDigits+'</small>':'<small class="muted">Vendedor ainda não cadastrou o WhatsApp comercial.</small>'):"";
+    const whatsappAction=(whatsappDigits?'<a class="whatsapp-link" href="https://wa.me/55'+whatsappDigits+'?text='+encodeURIComponent(messageText)+'" target="_blank" rel="noopener noreferrer">CHAT COM O VENDEDOR • WHATSAPP</a><small class="muted">WhatsApp: +55'+whatsappDigits+'</small>':'<small class="muted">Vendedor ainda não cadastrou o WhatsApp comercial.</small>');
     return '<div class="item"><div><b>'+esc(p?.name||"Produto")+'</b><small>'+esc(q.store)+' • '+new Date(q.created_at).toLocaleString("pt-BR")+'</small><small>Produto: '+money(q.price)+' • Frete: '+money(q.shipping)+' • Validade: '+expiry+'</small>'+(q.url?'<small><a href="'+esc(q.url)+'" target="_blank" rel="noopener noreferrer">Abrir anúncio</a></small>':"")+(q.notes?'<small>'+esc(q.notes)+'</small>':"")+whatsappAction+(own&&!buyerMode()?'<button data-del-price="'+esc(q.id)+'">Excluir cotação</button>':"")+'</div><div class="price">'+money(total(q))+'<small>total com frete</small></div></div>';
   }).join(""):'<div class="empty">Nenhuma cotação encontrada.</div>';
   const grouped=products.map(p=>({p,qs:prices.filter(q=>q.product_id===p.id)})).filter(x=>x.qs.length);
@@ -122,7 +122,7 @@ $("productForm").addEventListener("submit",async e=>{
   e.target.reset();await loadData();alert("Produto cadastrado. O cadastro será mantido mesmo quando as cotações vencerem.");
 });
 $("priceForm").addEventListener("submit",async e=>{
-  e.preventDefault();if(buyerMode())return alert("Compradores não cadastram cotações.");if(!products.length)return alert("Ainda não existem produtos cadastrados.");
+  e.preventDefault();if(buyerMode())return alert("Compradores não cadastram cotações.");if(!products.length)return alert("Ainda não existem produtos cadastrados.");const ownProfile=supplierProfiles.find(x=>x.user_id===currentUser?.id);if(!ownProfile?.whatsapp)return alert("Antes de publicar uma cotação, cadastre seu WhatsApp em Meu perfil. Ele aparecerá no anúncio para o comprador entrar em contato.");
   const days=Number($("quoteValidity").value);if(![2,4,7].includes(days))return alert("Validade inválida.");
   const expiresAt=new Date(Date.now()+days*86400000).toISOString();
   const row={product_id:$("priceProduct").value,store:$("store").value.trim(),price:num($("price").value),shipping:num($("shipping").value),url:$("url").value.trim()||null,notes:$("notes").value.trim()||null,created_by:currentUser.id,expires_at:expiresAt};
@@ -141,7 +141,7 @@ function normalizeWhatsapp(value){
   return digits;
 }
 async function loadSupplierProfile(){
-  if(currentRole!=="fornecedor")return;
+  if(currentRole!=="fornecedor"&&!isAdmin)return;
   const own=supplierProfiles.find(x=>x.user_id===currentUser?.id);
   $("supplierWhatsapp").value=own?.whatsapp||"";
   const chosen=own?.categories||[];document.querySelectorAll("[name=supplierCategories]").forEach(c=>c.checked=chosen.includes(c.value));
@@ -149,7 +149,7 @@ async function loadSupplierProfile(){
 }
 $("supplierProfileForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  if(currentRole!=="fornecedor")return message("supplierProfileMessage","Somente fornecedores podem alterar este perfil.","error");
+  if(currentRole!=="fornecedor"&&!isAdmin)return message("supplierProfileMessage","Somente fornecedores e administradores podem alterar este perfil.","error");
   const whatsapp=normalizeWhatsapp($("supplierWhatsapp").value);
   if(!/^[0-9]{10,11}$/.test(whatsapp))return message("supplierProfileMessage","Informe um número válido com DDD (10 ou 11 dígitos).","error");
   const categories=[...document.querySelectorAll("[name=supplierCategories]:checked")].map(c=>c.value);
