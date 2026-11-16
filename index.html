@@ -74,6 +74,7 @@
       <button class="tab active" data-tab="home">Início</button>
       <button id="productsTab" class="tab" data-tab="products">Produtos</button>
       <button id="pricesTab" class="tab" data-tab="prices">Cotações</button>
+      <button id="supplierProfileTab" class="tab hidden" data-tab="supplierProfile">Meu perfil</button>
       <button id="reportsTab" class="tab" data-tab="reports">Relatórios</button>
       <button id="adminTab" class="tab hidden" data-tab="admin">Administração</button>
     </nav>
@@ -120,6 +121,17 @@
         <h3 id="quoteListTitle">Cotações disponíveis</h3>
         <label for="quoteSearch">Pesquisar cotação por produto ou fornecedor</label><input id="quoteSearch" type="search" placeholder="Digite para pesquisar...">
         <button id="exportCsv" type="button">Exportar minhas cotações CSV</button><div id="priceList"></div>
+      </section>
+      <section id="supplierProfile" class="view hidden">
+        <h2>Meu perfil de fornecedor</h2>
+        <p class="muted">Cadastre seu WhatsApp comercial para receber contatos de compradores diretamente pelo MFR Market.</p>
+        <form id="supplierProfileForm" class="panel">
+          <label for="supplierWhatsapp">WhatsApp comercial com DDD</label>
+          <input id="supplierWhatsapp" type="tel" inputmode="tel" autocomplete="tel" placeholder="(47) 99999-9999" required>
+          <small class="muted">Informe o DDD e o número. O código do Brasil será acrescentado automaticamente.</small>
+          <button type="submit">SALVAR WHATSAPP</button>
+          <p id="supplierProfileMessage" class="notice"></p>
+        </form>
       </section>
       <section id="reports" class="view hidden"><h2>Relatórios de compras</h2><p class="muted">Estimativa comparativa calculada pela diferença entre a maior e a menor cotação disponível para cada produto. Não representa economia já realizada.</p><div class="dashboard"><article class="panel"><h3>Economia potencial por item</h3><strong id="potentialSavings">R$ 0,00</strong></article><article class="panel"><h3>Produtos com comparação</h3><strong id="comparedProducts">0</strong></article></div><h3>Oportunidades de economia</h3><div id="savingsReport"></div></section>
       <section id="admin" class="view hidden">
