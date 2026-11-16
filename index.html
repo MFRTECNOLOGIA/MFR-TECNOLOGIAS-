@@ -102,12 +102,28 @@
           <input id="pSku" placeholder="Código do produto">
 
           <label for="pCategory">Categoria</label>
-          <input id="pCategory" placeholder="Ex.: Eletrônicos">
+          <select id="pCategory" required>
+            <option value="">Selecione uma categoria</option>
+            <option value="CARNE">CARNE</option>
+            <option value="PAPELARIA">PAPELARIA</option>
+            <option value="INSUMOS">INSUMOS</option>
+            <option value="HIGIENE E LIMPEZA">HIGIENE E LIMPEZA</option>
+            <option value="EMBALAGENS">EMBALAGENS</option>
+          </select>
 
           <button type="submit">Salvar produto</button>
         </form>
 
         <h3>Produtos cadastrados</h3>
+        <label for="productCategoryFilter">Filtrar por categoria</label>
+        <select id="productCategoryFilter">
+          <option value="">Todas as categorias</option>
+          <option value="CARNE">CARNE</option>
+          <option value="PAPELARIA">PAPELARIA</option>
+          <option value="INSUMOS">INSUMOS</option>
+          <option value="HIGIENE E LIMPEZA">HIGIENE E LIMPEZA</option>
+          <option value="EMBALAGENS">EMBALAGENS</option>
+        </select>
         <div id="productList"></div>
       </section>
 
