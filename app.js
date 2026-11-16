@@ -4,7 +4,7 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_nGJ-UEn8kzof785jGuKFCA_N3g1RZux
 const ADMIN_EMAIL = "xavofelipe@gmail.com";
 const $ = id => document.getElementById(id);
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-let currentUser=null, currentRole=null, isAdmin=false, products=[], prices=[], accessUsers=[], supplierProfiles=[];
+let currentUser=null, currentRole=null, isAdmin=false, products=[], prices=[], accessUsers=[], supplierProfiles=[], buyerRequests=[], requestOffers=[];
 const money=n=>Number(n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const num=s=>{const v=String(s??"0").trim().replace(/\./g,"").replace(",",".");const n=Number(v);return Number.isFinite(n)?n:0};
@@ -12,7 +12,7 @@ function message(id,text,kind=""){const el=$(id);if(el){el.textContent=text;el.c
 function show(view){["loginView","pendingView","appView"].forEach(id=>$(id).classList.toggle("hidden",id!==view))}
 function allowedTabs(){
   const buyer=currentRole==="comprador", supplier=currentRole==="fornecedor";
-  $("supplierProfileTab").classList.toggle("hidden",!supplier);
+  $("supplierProfileTab").classList.toggle("hidden",!supplier);\n  $("requestsTab").classList.toggle("hidden",isAdmin);\n  $("requestCreateForm").classList.toggle("hidden",!buyer);\n  $("supplierCategoryBox").classList.toggle("hidden",!supplier);
   $("productsTab").classList.toggle("hidden",!isAdmin);
   $("homeAddProduct").classList.toggle("hidden",!isAdmin);
   $("homeAddQuote").classList.toggle("hidden",buyer);
@@ -31,12 +31,12 @@ function tab(name){
   if(name==="admin"&&!isAdmin)return;
   if(name==="products"&&!isAdmin)return;
   if(name==="reports"&&currentRole==="fornecedor")return;
-  if(name==="supplierProfile"&&currentRole!=="fornecedor")return;
+  if(name==="supplierProfile"&&currentRole!=="fornecedor")return;\n  if(name==="requests"&&isAdmin)return;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("hidden",x.id!==name));
   document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));
   if(name==="admin"&&isAdmin)loadAccessList();
   if(name==="reports")renderReports();
-  if(name==="supplierProfile")loadSupplierProfile();
+  if(name==="supplierProfile")loadSupplierProfile();\n  if(name==="requests")renderBuyerRequests();
 }
 document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.tab)));
 document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.go)));
@@ -44,10 +44,12 @@ async function loadData(){
   const [pRes,qRes,sRes]=await Promise.all([
     supabaseClient.from("products").select("id,name,sku,category,created_at").order("name"),
     supabaseClient.from("prices").select("id,product_id,store,price,shipping,url,notes,created_at,created_by,expires_at").order("created_at",{ascending:false}),
-    supabaseClient.from("supplier_profiles").select("user_id,whatsapp")
+    supabaseClient.from("supplier_profiles").select("user_id,whatsapp,categories"),
+    supabaseClient.from("buyer_requests").select("*").order("created_at",{ascending:false}),
+    supabaseClient.from("supplier_request_offers").select("*").order("created_at",{ascending:false})
   ]);
   if(pRes.error)throw pRes.error;if(qRes.error)throw qRes.error;if(sRes.error)throw sRes.error;
-  products=pRes.data||[];prices=qRes.data||[];supplierProfiles=sRes.data||[];
+  products=pRes.data||[];prices=qRes.data||[];supplierProfiles=sRes.data||[];\n  const [rRes,oRes]=await Promise.all([supabaseClient.from("buyer_requests").select("*").order("created_at",{ascending:false}),supabaseClient.from("supplier_request_offers").select("*").order("created_at",{ascending:false})]);\n  if(rRes.error)throw rRes.error;if(oRes.error)throw oRes.error;buyerRequests=rRes.data||[];requestOffers=oRes.data||[];
   if(isAdmin){
     const {data,error}=await supabaseClient.from("mfr_access").select("email,name,approved,role,created_at");
     if(error)console.warn("Métricas de usuários indisponíveis:",error.message);
@@ -132,7 +134,7 @@ function normalizeWhatsapp(value){
 async function loadSupplierProfile(){
   if(currentRole!=="fornecedor")return;
   const own=supplierProfiles.find(x=>x.user_id===currentUser?.id);
-  $("supplierWhatsapp").value=own?.whatsapp||"";
+  $("supplierWhatsapp").value=own?.whatsapp||"";\n  const chosen=own?.categories||[];document.querySelectorAll("[name=supplierCategories]").forEach(c=>c.checked=chosen.includes(c.value));
   message("supplierProfileMessage",own?"WhatsApp cadastrado. Você pode atualizá-lo.":"Cadastre seu WhatsApp comercial para receber negociações.");
 }
 $("supplierProfileForm").addEventListener("submit",async e=>{
@@ -140,7 +142,7 @@ $("supplierProfileForm").addEventListener("submit",async e=>{
   if(currentRole!=="fornecedor")return message("supplierProfileMessage","Somente fornecedores podem alterar este perfil.","error");
   const whatsapp=normalizeWhatsapp($("supplierWhatsapp").value);
   if(!/^[0-9]{10,11}$/.test(whatsapp))return message("supplierProfileMessage","Informe um número válido com DDD (10 ou 11 dígitos).","error");
-  const {error}=await supabaseClient.from("supplier_profiles").upsert({user_id:currentUser.id,whatsapp,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+  const categories=[...document.querySelectorAll("[name=supplierCategories]:checked")].map(c=>c.value);\n  if(!categories.length)return message("supplierProfileMessage","Selecione ao menos uma categoria de atuação.","error");\n  const {error}=await supabaseClient.from("supplier_profiles").upsert({user_id:currentUser.id,whatsapp,categories,updated_at:new Date().toISOString()},{onConflict:"user_id"});
   if(error)return message("supplierProfileMessage","Não foi possível salvar: "+error.message,"error");
   message("supplierProfileMessage","WhatsApp salvo com sucesso! Compradores autorizados já poderão negociar com você.","success");
   await loadData();
@@ -160,7 +162,32 @@ $("accessForm").addEventListener("submit",async e=>{
   const button=e.target.querySelector('button[type="submit"]');button.disabled=true;button.textContent="CRIANDO...";
   try{const {data,error}=await supabaseClient.functions.invoke("mfr-create-user",{body:{name,email,password,role}});if(error)throw error;if(data?.error)throw new Error(data.error);e.target.reset();message("createUserMessage","Usuário criado com sucesso!","success");await loadAccessList();await loadData()}catch(err){message("createUserMessage","Não foi possível criar o usuário: "+(err.message||"Erro desconhecido."),"error")}finally{button.disabled=false;button.textContent="CRIAR USUÁRIO"}
 });
-async function checkSession(session){
+
+function renderBuyerRequests(){
+  const isBuyer=currentRole==="comprador";
+  const visible=buyerRequests.filter(r=>!isBuyer||r.buyer_id===currentUser?.id);
+  $("requestList").innerHTML=visible.length?visible.map(r=>{
+    const offers=requestOffers.filter(o=>o.request_id===r.id);
+    const offerHtml=isBuyer?offers.map(o=>'<div class="notification"><b>Proposta: '+money(o.price)+' + frete '+money(o.shipping)+'</b><small>Entrega: '+esc(o.delivery_estimate||"A combinar")+' · '+esc(o.notes||"")+'</small></div>').join(""):'';
+    const action=!isBuyer?'<form class="offer-form panel" data-offer="'+esc(r.id)+'"><label>Preço (R$)</label><input name="offerPrice" required inputmode="decimal" placeholder="0,00"><label>Frete (R$)</label><input name="offerShipping" inputmode="decimal" value="0"><label>Prazo de entrega</label><input name="offerDelivery" placeholder="Ex.: 2 dias"><label>Observações</label><textarea name="offerNotes"></textarea><button type="submit">ENVIAR PROPOSTA</button></form>':'';
+    return '<article class="panel request-card"><div><b>'+esc(r.product_name)+'</b><small>'+esc(r.category)+' · Quantidade: '+esc(r.quantity)+' · Entrega: '+esc(r.delivery_location)+'</small><p>'+esc(r.specifications||"")+'</p><small>Necessário até: '+(r.needed_by?new Date(r.needed_by+"T12:00:00").toLocaleDateString("pt-BR"):"A combinar")+' · Solicitação válida até '+new Date(r.expires_at).toLocaleDateString("pt-BR")+'</small><p>'+esc(r.notes||"")+'</p></div>'+offerHtml+action+'</article>';
+  }).join(""):'<div class="empty">Nenhuma solicitação disponível nesta categoria no momento.</div>';
+  document.querySelectorAll("[data-offer]").forEach(form=>form.onsubmit=async e=>{
+    e.preventDefault();const f=e.currentTarget,fd=new FormData(f);
+    const row={request_id:f.dataset.offer,supplier_id:currentUser.id,price:num(fd.get("offerPrice")),shipping:num(fd.get("offerShipping")),delivery_estimate:String(fd.get("offerDelivery")||""),notes:String(fd.get("offerNotes")||"")};
+    const {error}=await supabaseClient.from("supplier_request_offers").upsert(row,{onConflict:"request_id,supplier_id"});
+    if(error)return alert("Não foi possível enviar a proposta: "+error.message);
+    await loadData();renderBuyerRequests();alert("Proposta enviada ao comprador!");
+  });
+}
+$("requestCreateForm").addEventListener("submit",async e=>{
+  e.preventDefault();if(currentRole!=="comprador")return;
+  const row={buyer_id:currentUser.id,product_name:$("requestProduct").value.trim(),category:$("requestCategory").value,quantity:$("requestQuantity").value.trim(),specifications:$("requestSpecs").value.trim()||null,delivery_location:$("requestLocation").value.trim(),needed_by:$("requestDate").value||null,notes:$("requestNotes").value.trim()||null};
+  const {error}=await supabaseClient.from("buyer_requests").insert(row);
+  if(error)return alert("Não foi possível publicar: "+error.message);
+  e.target.reset();await loadData();renderBuyerRequests();alert("Solicitação publicada! Fornecedores da categoria selecionada poderão enviar propostas.");
+});
+\nasync function checkSession(session){
   currentUser=session?.user||null;
   if(!currentUser){currentRole=null;isAdmin=false;show("loginView");return}
   $("signedEmail").textContent=currentUser.email||"";
