@@ -12,7 +12,10 @@ function message(id,text,kind=""){const el=$(id);if(el){el.textContent=text;el.c
 function show(view){["loginView","pendingView","appView"].forEach(id=>$(id).classList.toggle("hidden",id!==view))}
 function allowedTabs(){
   const buyer=currentRole==="comprador", supplier=currentRole==="fornecedor";
-  $("supplierProfileTab").classList.toggle("hidden",!supplier);\n  $("requestsTab").classList.toggle("hidden",isAdmin);\n  $("requestCreateForm").classList.toggle("hidden",!buyer);\n  $("supplierCategoryBox").classList.toggle("hidden",!supplier);
+  $("supplierProfileTab").classList.toggle("hidden",!supplier);
+  $("requestsTab").classList.toggle("hidden",isAdmin);
+  $("requestCreateForm").classList.toggle("hidden",!buyer);
+  $("supplierCategoryBox").classList.toggle("hidden",!supplier);
   $("productsTab").classList.toggle("hidden",!isAdmin);
   $("homeAddProduct").classList.toggle("hidden",!isAdmin);
   $("homeAddQuote").classList.toggle("hidden",buyer);
@@ -31,12 +34,14 @@ function tab(name){
   if(name==="admin"&&!isAdmin)return;
   if(name==="products"&&!isAdmin)return;
   if(name==="reports"&&currentRole==="fornecedor")return;
-  if(name==="supplierProfile"&&currentRole!=="fornecedor")return;\n  if(name==="requests"&&isAdmin)return;
+  if(name==="supplierProfile"&&currentRole!=="fornecedor")return;
+  if(name==="requests"&&isAdmin)return;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("hidden",x.id!==name));
   document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));
   if(name==="admin"&&isAdmin)loadAccessList();
   if(name==="reports")renderReports();
-  if(name==="supplierProfile")loadSupplierProfile();\n  if(name==="requests")renderBuyerRequests();
+  if(name==="supplierProfile")loadSupplierProfile();
+  if(name==="requests")renderBuyerRequests();
 }
 document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.tab)));
 document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.go)));
@@ -138,7 +143,8 @@ function normalizeWhatsapp(value){
 async function loadSupplierProfile(){
   if(currentRole!=="fornecedor")return;
   const own=supplierProfiles.find(x=>x.user_id===currentUser?.id);
-  $("supplierWhatsapp").value=own?.whatsapp||"";\n  const chosen=own?.categories||[];document.querySelectorAll("[name=supplierCategories]").forEach(c=>c.checked=chosen.includes(c.value));
+  $("supplierWhatsapp").value=own?.whatsapp||"";
+  const chosen=own?.categories||[];document.querySelectorAll("[name=supplierCategories]").forEach(c=>c.checked=chosen.includes(c.value));
   message("supplierProfileMessage",own?"WhatsApp cadastrado. Você pode atualizá-lo.":"Cadastre seu WhatsApp comercial para receber negociações.");
 }
 $("supplierProfileForm").addEventListener("submit",async e=>{
@@ -146,7 +152,9 @@ $("supplierProfileForm").addEventListener("submit",async e=>{
   if(currentRole!=="fornecedor")return message("supplierProfileMessage","Somente fornecedores podem alterar este perfil.","error");
   const whatsapp=normalizeWhatsapp($("supplierWhatsapp").value);
   if(!/^[0-9]{10,11}$/.test(whatsapp))return message("supplierProfileMessage","Informe um número válido com DDD (10 ou 11 dígitos).","error");
-  const categories=[...document.querySelectorAll("[name=supplierCategories]:checked")].map(c=>c.value);\n  if(!categories.length)return message("supplierProfileMessage","Selecione ao menos uma categoria de atuação.","error");\n  const {error}=await supabaseClient.from("supplier_profiles").upsert({user_id:currentUser.id,whatsapp,categories,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+  const categories=[...document.querySelectorAll("[name=supplierCategories]:checked")].map(c=>c.value);
+  if(!categories.length)return message("supplierProfileMessage","Selecione ao menos uma categoria de atuação.","error");
+  const {error}=await supabaseClient.from("supplier_profiles").upsert({user_id:currentUser.id,whatsapp,categories,updated_at:new Date().toISOString()},{onConflict:"user_id"});
   if(error)return message("supplierProfileMessage","Não foi possível salvar: "+error.message,"error");
   message("supplierProfileMessage","WhatsApp salvo com sucesso! Compradores autorizados já poderão negociar com você.","success");
   await loadData();
@@ -191,7 +199,8 @@ $("requestCreateForm").addEventListener("submit",async e=>{
   if(error)return alert("Não foi possível publicar: "+error.message);
   e.target.reset();await loadData();renderBuyerRequests();alert("Solicitação publicada! Fornecedores da categoria selecionada poderão enviar propostas.");
 });
-\nasync function checkSession(session){
+
+async function checkSession(session){
   currentUser=session?.user||null;
   if(!currentUser){currentRole=null;isAdmin=false;show("loginView");return}
   $("signedEmail").textContent=currentUser.email||"";
