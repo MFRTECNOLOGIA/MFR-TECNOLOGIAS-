@@ -1,44 +1,56 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#111111">
-  <meta name="description" content="MFR Tecnologia & Ecommerce — MFR Market, gestão de produtos e cotações.">
-  <title>MFR Tecnologia & Ecommerce | MFR Market</title>
+  <meta name="theme-color" content="#b50924">
+  <meta name="description" content="MFR Market — conectando compradores e fornecedores.">
+  <title>MFR Market | Conectando negócios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
   <section id="loginView" class="login-screen">
-    <header class="login-brand">
-      <div class="brand-lockup">
-        <span class="brand-mark">MFR</span>
-        <div class="brand-copy">
-          <strong>MFR TECNOLOGIA <span>&</span> ECOMMERCE</strong>
-          <small>MFR MARKET · GESTÃO INTELIGENTE DE COMPRAS</small>
+    <div class="login-visual">
+      <div class="visual-shade"></div>
+      <div class="visual-content">
+        <div class="hero-brand"><span class="hero-mark">MFR</span><span class="hero-market">MARKET</span></div>
+        <p class="hero-kicker">CONECTANDO COMPRADORES E FORNECEDORES</p>
+        <div class="role-pills">
+          <span>🛒 COMPRADOR</span>
+          <span>🤝 FORNECEDOR</span>
+        </div>
+        <h1>Negócios melhores<br><em>começam com conexões.</em></h1>
+        <p class="hero-description">Encontre produtos, compare cotações e negocie diretamente com fornecedores em uma plataforma feita para impulsionar seu negócio.</p>
+        <div class="hero-benefits">
+          <div><b>01</b><span>Conexão direta<br>entre negócios</span></div>
+          <div><b>02</b><span>Mais competitividade<br>nas compras</span></div>
+          <div><b>03</b><span>Gestão simples<br>e organizada</span></div>
         </div>
       </div>
-      <p>Controle de produtos, fornecedores e cotações em um só lugar.</p>
-    </header>
+      <div class="visual-footer">MFR TECNOLOGIA & E-COMMERCE <span>•</span> PLATAFORMA B2B</div>
+    </div>
 
-    <form id="loginForm" class="panel">
-      <h2>Acessar plataforma</h2>
-
-      <label for="loginEmail">E-mail</label>
-      <input id="loginEmail" type="email"
-        placeholder="seu@email.com"
-        autocomplete="username" required>
-
-      <label for="loginPassword">Senha</label>
-      <input id="loginPassword" type="password"
-        placeholder="Digite sua senha"
-        autocomplete="current-password" required>
-
-      <button type="submit">ENTRAR</button>
-      <p id="authMessage" class="notice"></p>
-    </form>
+    <div class="login-side">
+      <div class="login-card">
+        <div class="login-logo"><span>MFR</span><b>MARKET</b><i>®</i></div>
+        <p class="login-eyebrow">BEM-VINDO À MFR MARKET</p>
+        <h2>Acesse sua conta</h2>
+        <p class="login-subtitle">Entre com seu e-mail e senha para continuar.</p>
+        <form id="loginForm">
+          <label for="loginEmail">E-mail</label>
+          <div class="field-wrap"><span>✉</span><input id="loginEmail" type="email" placeholder="seu@email.com" autocomplete="username" required></div>
+          <label for="loginPassword">Senha</label>
+          <div class="field-wrap"><span>▣</span><input id="loginPassword" type="password" placeholder="Digite sua senha" autocomplete="current-password" required></div>
+          <button type="submit">ENTRAR NA PLATAFORMA <span>→</span></button>
+          <p id="authMessage" class="notice"></p>
+        </form>
+        <div class="login-security"><span>✓</span> Ambiente seguro e acesso autorizado</div>
+      </div>
+      <div class="login-copyright">© MFR Market · Todos os direitos reservados</div>
+    </div>
   </section>
 
   <section id="pendingView" class="hidden panel">
@@ -56,168 +68,68 @@
           <small>MFR MARKET · <span id="signedEmail"></span></small>
         </div>
       </div>
-      <div>
-        <span id="net">● Conectado</span>
-        <button id="signOut" type="button">Sair</button>
-      </div>
+      <div><span id="net">● Conectado</span><button id="signOut" type="button">Sair</button></div>
     </header>
-
     <nav class="tabs">
       <button class="tab active" data-tab="home">Início</button>
       <button class="tab" data-tab="products">Produtos</button>
       <button class="tab" data-tab="prices">Cotações</button>
-      <button id="adminTab" class="tab hidden" data-tab="admin">
-        Administração
-      </button>
+      <button id="adminTab" class="tab hidden" data-tab="admin">Administração</button>
     </nav>
-
     <main>
       <section id="home" class="view">
         <h2>Painel geral</h2>
-
         <div class="dashboard">
-          <article class="panel">
-            <h3>Produtos cadastrados</h3>
-            <strong id="countProducts">0</strong>
-          </article>
-
-          <article class="panel">
-            <h3>Cotações registradas</h3>
-            <strong id="countPrices">0</strong>
-          </article>
+          <article class="panel"><h3>Produtos cadastrados</h3><strong id="countProducts">0</strong></article>
+          <article class="panel"><h3>Cotações registradas</h3><strong id="countPrices">0</strong></article>
         </div>
-
-        <h3>Melhores preços</h3>
-        <div id="bestPrices"></div>
-
-        <button type="button" data-go="products">
-          Cadastrar produto
-        </button>
-
-        <button type="button" data-go="prices">
-          Registrar cotação
-        </button>
+        <h3>Melhores preços</h3><div id="bestPrices"></div>
+        <button type="button" data-go="products">Cadastrar produto</button>
+        <button type="button" data-go="prices">Registrar cotação</button>
       </section>
-
       <section id="products" class="view hidden">
         <h2>Cadastro de produtos</h2>
-
         <form id="productForm" class="panel">
-          <label for="pName">Nome do produto</label>
-          <input id="pName" required
-            placeholder="Ex.: Televisor 32 polegadas">
-
-          <label for="pSku">Código / SKU</label>
-          <input id="pSku" placeholder="Código do produto">
-
+          <label for="pName">Nome do produto</label><input id="pName" required placeholder="Ex.: Televisor 32 polegadas">
+          <label for="pSku">Código / SKU</label><input id="pSku" placeholder="Código do produto">
           <label for="pCategory">Categoria</label>
-          <select id="pCategory" required>
-            <option value="">Selecione uma categoria</option>
-            <option value="CARNE">CARNE</option>
-            <option value="PAPELARIA">PAPELARIA</option>
-            <option value="INSUMOS">INSUMOS</option>
-            <option value="HIGIENE E LIMPEZA">HIGIENE E LIMPEZA</option>
-            <option value="EMBALAGENS">EMBALAGENS</option>
-          </select>
-
+          <select id="pCategory" required><option value="">Selecione uma categoria</option><option value="CARNE">CARNE</option><option value="PAPELARIA">PAPELARIA</option><option value="INSUMOS">INSUMOS</option><option value="HIGIENE E LIMPEZA">HIGIENE E LIMPEZA</option><option value="EMBALAGENS">EMBALAGENS</option></select>
           <button type="submit">Salvar produto</button>
         </form>
-
         <h3>Produtos cadastrados</h3>
         <label for="productCategoryFilter">Filtrar por categoria</label>
-        <select id="productCategoryFilter">
-          <option value="">Todas as categorias</option>
-          <option value="CARNE">CARNE</option>
-          <option value="PAPELARIA">PAPELARIA</option>
-          <option value="INSUMOS">INSUMOS</option>
-          <option value="HIGIENE E LIMPEZA">HIGIENE E LIMPEZA</option>
-          <option value="EMBALAGENS">EMBALAGENS</option>
-        </select>
+        <select id="productCategoryFilter"><option value="">Todas as categorias</option><option value="CARNE">CARNE</option><option value="PAPELARIA">PAPELARIA</option><option value="INSUMOS">INSUMOS</option><option value="HIGIENE E LIMPEZA">HIGIENE E LIMPEZA</option><option value="EMBALAGENS">EMBALAGENS</option></select>
         <div id="productList"></div>
       </section>
-
       <section id="prices" class="view hidden">
         <h2>Registro de cotações</h2>
-
         <form id="priceForm" class="panel">
-          <label for="priceProduct">Produto</label>
-          <select id="priceProduct" required></select>
-
-          <label for="store">Loja / Fornecedor</label>
-          <input id="store" required placeholder="Nome da loja">
-
-          <label for="price">Preço do produto</label>
-          <input id="price" required type="text"
-            inputmode="decimal" placeholder="0,00">
-
-          <label for="shipping">Frete</label>
-          <input id="shipping" type="text"
-            inputmode="decimal" value="0">
-
-          <label for="url">Link do anúncio</label>
-          <input id="url" type="url" placeholder="https://">
-
-          <label for="notes">Observações</label>
-          <textarea id="notes"
-            placeholder="Informações adicionais"></textarea>
-
+          <label for="priceProduct">Produto</label><select id="priceProduct" required></select>
+          <label for="store">Loja / Fornecedor</label><input id="store" required placeholder="Nome da loja">
+          <label for="price">Preço do produto</label><input id="price" required type="text" inputmode="decimal" placeholder="0,00">
+          <label for="shipping">Frete</label><input id="shipping" type="text" inputmode="decimal" value="0">
+          <label for="url">Link do anúncio</label><input id="url" type="url" placeholder="https://">
+          <label for="notes">Observações</label><textarea id="notes" placeholder="Informações adicionais"></textarea>
           <button type="submit">Registrar cotação</button>
         </form>
-
-        <h3>Histórico de cotações</h3>
-
-        <button id="exportCsv" type="button">
-          Exportar cotações CSV
-        </button>
-
-        <div id="priceList"></div>
+        <h3>Histórico de cotações</h3><button id="exportCsv" type="button">Exportar cotações CSV</button><div id="priceList"></div>
       </section>
-
       <section id="admin" class="view hidden">
         <h2>Administração MFR</h2>
-
-        <p>
-          Somente o administrador principal pode criar,
-          liberar ou bloquear usuários.
-        </p>
-
+        <p>Somente o administrador principal pode criar, liberar ou bloquear usuários.</p>
         <form id="accessForm" class="panel">
           <h3>Criar novo usuário</h3>
-
-          <label for="accessName">Nome do usuário</label>
-          <input id="accessName" type="text"
-            required placeholder="Nome completo">
-
-          <label for="accessEmail">E-mail de acesso</label>
-          <input id="accessEmail" type="email"
-            required placeholder="usuario@email.com">
-
-          <label for="accessPassword">Senha inicial</label>
-          <input id="accessPassword" type="password"
-            required minlength="8"
-            autocomplete="new-password"
-            placeholder="Mínimo de 8 caracteres">
-
-          <label for="accessRole">Perfil do usuário</label>
-
-          <select id="accessRole" required>
-            <option value="comprador">Comprador</option>
-            <option value="fornecedor">Fornecedor</option>
-          </select>
-
-          <button type="submit">CRIAR USUÁRIO</button>
-
-          <p id="createUserMessage" class="notice"></p>
+          <label for="accessName">Nome do usuário</label><input id="accessName" type="text" required placeholder="Nome completo">
+          <label for="accessEmail">E-mail de acesso</label><input id="accessEmail" type="email" required placeholder="usuario@email.com">
+          <label for="accessPassword">Senha inicial</label><input id="accessPassword" type="password" required minlength="8" autocomplete="new-password" placeholder="Mínimo de 8 caracteres">
+          <label for="accessRole">Perfil do usuário</label><select id="accessRole" required><option value="comprador">Comprador</option><option value="fornecedor">Fornecedor</option></select>
+          <button type="submit">CRIAR USUÁRIO</button><p id="createUserMessage" class="notice"></p>
         </form>
-
-        <h3>Usuários cadastrados</h3>
-        <div id="accessList"></div>
+        <h3>Usuários cadastrados</h3><div id="accessList"></div>
       </section>
     </main>
   </section>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
-
 </body>
 </html>
