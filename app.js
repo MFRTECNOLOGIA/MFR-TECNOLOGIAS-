@@ -4,7 +4,7 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_nGJ-UEn8kzof785jGuKFCA_N3g1RZux
 const ADMIN_EMAIL = "xavofelipe@gmail.com";
 const $ = id => document.getElementById(id);
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-let currentUser=null, currentRole=null, isAdmin=false, products=[], prices=[], accessUsers=[];
+let currentUser=null, currentRole=null, isAdmin=false, products=[], prices=[], accessUsers=[], supplierProfiles=[];
 const money=n=>Number(n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const num=s=>{const v=String(s??"0").trim().replace(/\./g,"").replace(",",".");const n=Number(v);return Number.isFinite(n)?n:0};
@@ -12,6 +12,7 @@ function message(id,text,kind=""){const el=$(id);if(el){el.textContent=text;el.c
 function show(view){["loginView","pendingView","appView"].forEach(id=>$(id).classList.toggle("hidden",id!==view))}
 function allowedTabs(){
   const buyer=currentRole==="comprador", supplier=currentRole==="fornecedor";
+  $("supplierProfileTab").classList.toggle("hidden",!supplier);
   $("productsTab").classList.toggle("hidden",!isAdmin);
   $("homeAddProduct").classList.toggle("hidden",!isAdmin);
   $("homeAddQuote").classList.toggle("hidden",buyer);
@@ -30,20 +31,23 @@ function tab(name){
   if(name==="admin"&&!isAdmin)return;
   if(name==="products"&&!isAdmin)return;
   if(name==="reports"&&currentRole==="fornecedor")return;
+  if(name==="supplierProfile"&&currentRole!=="fornecedor")return;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("hidden",x.id!==name));
   document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));
   if(name==="admin"&&isAdmin)loadAccessList();
   if(name==="reports")renderReports();
+  if(name==="supplierProfile")loadSupplierProfile();
 }
 document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.tab)));
 document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.go)));
 async function loadData(){
-  const [pRes,qRes]=await Promise.all([
+  const [pRes,qRes,sRes]=await Promise.all([
     supabaseClient.from("products").select("id,name,sku,category,created_at").order("name"),
-    supabaseClient.from("prices").select("id,product_id,store,price,shipping,url,notes,created_at,created_by,expires_at").order("created_at",{ascending:false})
+    supabaseClient.from("prices").select("id,product_id,store,price,shipping,url,notes,created_at,created_by,expires_at").order("created_at",{ascending:false}),
+    supabaseClient.from("supplier_profiles").select("user_id,whatsapp")
   ]);
-  if(pRes.error)throw pRes.error;if(qRes.error)throw qRes.error;
-  products=pRes.data||[];prices=qRes.data||[];
+  if(pRes.error)throw pRes.error;if(qRes.error)throw qRes.error;if(sRes.error)throw sRes.error;
+  products=pRes.data||[];prices=qRes.data||[];supplierProfiles=sRes.data||[];
   if(isAdmin){
     const {data,error}=await supabaseClient.from("mfr_access").select("email,name,approved,role,created_at");
     if(error)console.warn("Métricas de usuários indisponíveis:",error.message);
@@ -66,7 +70,11 @@ function render(){
   $("priceList").innerHTML=shownQuotes.length?shownQuotes.map(q=>{
     const p=products.find(x=>x.id===q.product_id),expiry=q.expires_at?new Date(q.expires_at).toLocaleDateString("pt-BR"):"—";
     const own=isAdmin||q.created_by===currentUser?.id;
-    return '<div class="item"><div><b>'+esc(p?.name||"Produto")+'</b><small>'+esc(q.store)+' • '+new Date(q.created_at).toLocaleString("pt-BR")+'</small><small>Produto: '+money(q.price)+' • Frete: '+money(q.shipping)+' • Validade: '+expiry+'</small>'+(q.url?'<small><a href="'+esc(q.url)+'" target="_blank" rel="noopener noreferrer">Abrir anúncio</a></small>':"")+(q.notes?'<small>'+esc(q.notes)+'</small>':"")+(own&&!buyerMode()?'<button data-del-price="'+esc(q.id)+'">Excluir cotação</button>':"")+'</div><div class="price">'+money(total(q))+'<small>total com frete</small></div></div>';
+    const contact=supplierProfiles.find(x=>x.user_id===q.created_by)?.whatsapp||"";
+    const whatsappDigits=contact.replace(/[^0-9]/g,"");
+    const messageText="Olá! Tenho interesse na cotação do produto "+(p?.name||"Produto")+". Vi sua oferta na loja "+q.store+". Preço: "+money(q.price)+". Frete: "+money(q.shipping)+". Total: "+money(total(q))+". Podemos negociar?";
+    const whatsappAction=buyerMode()?(whatsappDigits?'<a class="whatsapp-link" href="https://wa.me/55'+whatsappDigits+'?text='+encodeURIComponent(messageText)+'" target="_blank" rel="noopener noreferrer">NEGOCIAR PELO WHATSAPP</a>':'<small class="muted">WhatsApp do fornecedor ainda não cadastrado.</small>'):"";
+    return '<div class="item"><div><b>'+esc(p?.name||"Produto")+'</b><small>'+esc(q.store)+' • '+new Date(q.created_at).toLocaleString("pt-BR")+'</small><small>Produto: '+money(q.price)+' • Frete: '+money(q.shipping)+' • Validade: '+expiry+'</small>'+(q.url?'<small><a href="'+esc(q.url)+'" target="_blank" rel="noopener noreferrer">Abrir anúncio</a></small>':"")+(q.notes?'<small>'+esc(q.notes)+'</small>':"")+whatsappAction+(own&&!buyerMode()?'<button data-del-price="'+esc(q.id)+'">Excluir cotação</button>':"")+'</div><div class="price">'+money(total(q))+'<small>total com frete</small></div></div>';
   }).join(""):'<div class="empty">Nenhuma cotação encontrada.</div>';
   const grouped=products.map(p=>({p,qs:prices.filter(q=>q.product_id===p.id)})).filter(x=>x.qs.length);
   $("bestPrices").innerHTML=grouped.length?grouped.map(x=>{const best=[...x.qs].sort((a,b)=>total(a)-total(b))[0];return '<div class="item"><div><b>'+esc(x.p.name)+'</b><small>Melhor oferta: '+esc(best.store)+'</small></div><div class="price">'+money(total(best))+'</div></div>'}).join(""):'<div class="empty">Ainda não há cotações para comparar.</div>';
@@ -114,6 +122,28 @@ $("exportCsv").addEventListener("click",()=>{
   const rows=[["Produto","Fornecedor","Preço","Frete","Total","Validade","Link","Observações"],...prices.map(q=>[products.find(p=>p.id===q.product_id)?.name||"",q.store,q.price,q.shipping,total(q),q.expires_at||"",q.url||"",q.notes||""])];
   const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\n");
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}));a.download="mfr-market-cotacoes.csv";a.click();URL.revokeObjectURL(a.href);
+});
+
+function normalizeWhatsapp(value){
+  let digits=String(value||"").replace(/[^0-9]/g,"");
+  if(digits.startsWith("55")&&digits.length>11)digits=digits.slice(2);
+  return digits;
+}
+async function loadSupplierProfile(){
+  if(currentRole!=="fornecedor")return;
+  const own=supplierProfiles.find(x=>x.user_id===currentUser?.id);
+  $("supplierWhatsapp").value=own?.whatsapp||"";
+  message("supplierProfileMessage",own?"WhatsApp cadastrado. Você pode atualizá-lo.":"Cadastre seu WhatsApp comercial para receber negociações.");
+}
+$("supplierProfileForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  if(currentRole!=="fornecedor")return message("supplierProfileMessage","Somente fornecedores podem alterar este perfil.","error");
+  const whatsapp=normalizeWhatsapp($("supplierWhatsapp").value);
+  if(!/^[0-9]{10,11}$/.test(whatsapp))return message("supplierProfileMessage","Informe um número válido com DDD (10 ou 11 dígitos).","error");
+  const {error}=await supabaseClient.from("supplier_profiles").upsert({user_id:currentUser.id,whatsapp,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+  if(error)return message("supplierProfileMessage","Não foi possível salvar: "+error.message,"error");
+  message("supplierProfileMessage","WhatsApp salvo com sucesso! Compradores autorizados já poderão negociar com você.","success");
+  await loadData();
 });
 async function loadAccessList(){
   if(!isAdmin)return;
