@@ -44,12 +44,16 @@ async function loadData(){
   const [pRes,qRes,sRes]=await Promise.all([
     supabaseClient.from("products").select("id,name,sku,category,created_at").order("name"),
     supabaseClient.from("prices").select("id,product_id,store,price,shipping,url,notes,created_at,created_by,expires_at").order("created_at",{ascending:false}),
-    supabaseClient.from("supplier_profiles").select("user_id,whatsapp,categories"),
+    supabaseClient.from("supplier_profiles").select("user_id,whatsapp,categories")
+  ]);
+  if(pRes.error)throw pRes.error;if(qRes.error)throw qRes.error;if(sRes.error)throw sRes.error;
+  products=pRes.data||[];prices=qRes.data||[];supplierProfiles=sRes.data||[];
+  const [rRes,oRes]=await Promise.all([
     supabaseClient.from("buyer_requests").select("*").order("created_at",{ascending:false}),
     supabaseClient.from("supplier_request_offers").select("*").order("created_at",{ascending:false})
   ]);
-  if(pRes.error)throw pRes.error;if(qRes.error)throw qRes.error;if(sRes.error)throw sRes.error;
-  products=pRes.data||[];prices=qRes.data||[];supplierProfiles=sRes.data||[];\n  const [rRes,oRes]=await Promise.all([supabaseClient.from("buyer_requests").select("*").order("created_at",{ascending:false}),supabaseClient.from("supplier_request_offers").select("*").order("created_at",{ascending:false})]);\n  if(rRes.error)throw rRes.error;if(oRes.error)throw oRes.error;buyerRequests=rRes.data||[];requestOffers=oRes.data||[];
+  if(rRes.error)throw rRes.error;if(oRes.error)throw oRes.error;
+  buyerRequests=rRes.data||[];requestOffers=oRes.data||[];
   if(isAdmin){
     const {data,error}=await supabaseClient.from("mfr_access").select("email,name,approved,role,created_at");
     if(error)console.warn("Métricas de usuários indisponíveis:",error.message);
