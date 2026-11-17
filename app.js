@@ -142,6 +142,9 @@ function normalizeWhatsapp(value){
 }
 async function loadSupplierProfile(){
   if(currentRole!=="fornecedor"&&!isAdmin)return;
+  // Garante que as categorias sejam exibidas também no perfil do administrador.
+  $("supplierCategoryBox").classList.remove("hidden");
+  $("supplierCategoryBox").style.display="block";
   const own=supplierProfiles.find(x=>x.user_id===currentUser?.id);
   $("supplierWhatsapp").value=own?.whatsapp||"";
   const chosen=own?.categories||[];document.querySelectorAll("[name=supplierCategories]").forEach(c=>c.checked=chosen.includes(c.value));
