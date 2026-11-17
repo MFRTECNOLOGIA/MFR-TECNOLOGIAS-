@@ -43,30 +43,32 @@ setInterval(updateMfrVisitorStats,60000);
 function message(id,text,kind=""){const el=$(id);if(el){el.textContent=text;el.className="notice "+kind}}
 function show(view){["loginView","pendingView","appView"].forEach(id=>$(id).classList.toggle("hidden",id!==view))}
 function allowedTabs(){
-  const buyer=currentRole==="comprador", supplier=currentRole==="fornecedor";
+  const buyer=currentRole==="comprador", supplier=currentRole==="fornecedor", provider=currentRole==="prestador";
   $("supplierProfileTab").classList.toggle("hidden",!(supplier||isAdmin));
   $("requestsTab").classList.toggle("hidden",isAdmin);
   $("requestCreateForm").classList.toggle("hidden",!buyer);
   $("supplierCategoryBox").classList.toggle("hidden",!(supplier||isAdmin));
-  $("servicesTab").classList.toggle("hidden",!(buyer||supplier||isAdmin));
+  $("servicesTab").classList.toggle("hidden",!(buyer||supplier||provider||isAdmin));
+  $("pricesTab").classList.toggle("hidden",provider);
   $("productsTab").classList.toggle("hidden",!isAdmin);
   $("homeAddProduct").classList.toggle("hidden",!isAdmin);
-  $("homeAddQuote").classList.toggle("hidden",buyer);
+  $("homeAddQuote").classList.toggle("hidden",buyer||provider);
   $("pricesTab").textContent=buyer?"Consultar preços":"Cotações";
   $("quoteListTitle").textContent=buyer?"Comparação de cotações (menor total primeiro)":supplier?"Minhas cotações":"Todas as cotações";
-  $("priceForm").classList.toggle("hidden",buyer);
-  $("exportCsv").classList.toggle("hidden",buyer);
-  $("reportsTab").classList.toggle("hidden",supplier);
+  $("priceForm").classList.toggle("hidden",buyer||provider);
+  $("exportCsv").classList.toggle("hidden",buyer||provider);
+  $("reportsTab").classList.toggle("hidden",supplier||provider);
   $("adminTab").classList.toggle("hidden",!isAdmin);
   $("adminOverview").classList.toggle("hidden",!isAdmin);
   $("notificationsPanel").classList.toggle("hidden",false);
-  $("homeTitle").textContent=isAdmin?"Painel administrativo MFR":buyer?"Painel do comprador":"Painel do fornecedor";
+  $("homeTitle").textContent=isAdmin?"Painel administrativo MFR":buyer?"Painel do comprador":provider?"Painel do prestador":"Painel do fornecedor";
   $("bestPricesTitle").textContent=buyer?"Melhores ofertas por produto":supplier?"Resumo das suas cotações":"Resumo de melhores preços";
 }
 function tab(name){
   if(name==="admin"&&!isAdmin)return;
   if(name==="products"&&!isAdmin)return;
-  if(name==="reports"&&currentRole==="fornecedor")return;
+  if(name==="reports"&&["fornecedor","prestador"].includes(currentRole))return;
+  if(name==="prices"&&currentRole==="prestador")return;
   if(name==="supplierProfile"&&currentRole!=="fornecedor"&&!isAdmin)return;
   if(name==="requests"&&isAdmin)return;
   if(name==="services"&&!["comprador","fornecedor"].includes(currentRole)&&!isAdmin)return;
@@ -251,7 +253,7 @@ function serviceRatingStars(value){
   return "★".repeat(rounded)+"☆".repeat(5-rounded);
 }
 async function loadServices(){
-  if(!currentUser||!["comprador","fornecedor","admin"].includes(currentRole))return;
+  if(!currentUser||!["comprador","fornecedor","prestador","admin"].includes(currentRole))return;
   const [catRes,providerRes,providerCatRes,requestRes,reviewRes]=await Promise.all([
     supabaseClient.from("service_categories").select("id,name,slug").eq("is_active",true).order("sort_order"),
     supabaseClient.from("service_providers").select("id,business_name,contact_name,description,whatsapp,email,city,state,service_area,is_verified,is_active").eq("is_active",true).order("business_name"),
@@ -313,8 +315,8 @@ function renderServiceRequests(){
     const city=norm(r.service_city), providerCity=norm(p.city), area=norm(p.service_area);
     return cats.includes(r.category_id)&&(providerCity===city||city.includes(providerCity.split("/")[0])||area.includes(city));
   });
-  const providerCanSeeRequest=r=>currentRole==="fornecedor"&&r.status==="pending"&&!!matchedServiceProvider(r);
-  const providerOwnsRequest=r=>currentRole==="fornecedor"&&r.status==="in_progress"&&matchedServiceProvider(r)?.id===r.provider_id;
+  const providerCanSeeRequest=r=>["fornecedor","prestador"].includes(currentRole)&&r.status==="pending"&&!!matchedServiceProvider(r);
+  const providerOwnsRequest=r=>["fornecedor","prestador"].includes(currentRole)&&r.status==="in_progress"&&matchedServiceProvider(r)?.id===r.provider_id;
   const mine=serviceRequests.filter(r=>isAdmin||r.requester_id===currentUser?.id||providerCanSeeRequest(r)||providerOwnsRequest(r));
   const html=mine.map(r=>{
     const provider=serviceProviders.find(p=>p.id===r.provider_id);
@@ -345,7 +347,7 @@ function renderServiceRequests(){
     const next=b.dataset.serviceStatus;
     const update={status:next,updated_at:new Date().toISOString()};
     if(next==="completed")update.completed_at=new Date().toISOString();
-    if(next==="in_progress"&&currentRole==="fornecedor"){const request=serviceRequests.find(r=>r.id===b.dataset.serviceId);const matched=matchedServiceProvider(request||{});if(matched)update.provider_id=matched.id;}
+    if(next==="in_progress"&&["fornecedor","prestador"].includes(currentRole)){const request=serviceRequests.find(r=>r.id===b.dataset.serviceId);const matched=matchedServiceProvider(request||{});if(matched)update.provider_id=matched.id;}
     const {error}=await supabaseClient.from("service_requests").update(update).eq("id",b.dataset.serviceId);
     if(error)return alert("Não foi possível atualizar a solicitação: "+error.message);
     await loadServices();
@@ -391,7 +393,7 @@ async function checkSession(session){
   if(!currentUser){currentRole=null;isAdmin=false;show("loginView");return}
   $("signedEmail").textContent=currentUser.email||"";
   const {data:access,error}=await supabaseClient.from("mfr_access").select("approved,role,email,name").eq("email",(currentUser.email||"").toLowerCase()).maybeSingle();
-  if(error||!access?.approved||!["admin","comprador","fornecedor"].includes(access.role)){
+  if(error||!access?.approved||!["admin","comprador","fornecedor","prestador"].includes(access.role)){
     currentRole=null;isAdmin=false;show("pendingView");message("pendingMessage",error?"Não foi possível verificar a autorização: "+error.message:"Seu acesso não está autorizado ou foi bloqueado.","error");return;
   }
   currentRole=access.role;isAdmin=currentRole==="admin"&&currentUser.email.toLowerCase()===ADMIN_EMAIL;
