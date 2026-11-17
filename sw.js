@@ -1,4 +1,4 @@
-const CACHE = 'mfr-market-v20261117-provider-opportunities-1';
+const CACHE = 'mfr-market-v20261117-prestador-2';
 const FILES = ['./', './index.html', './style.css', './app.js', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', event => {
