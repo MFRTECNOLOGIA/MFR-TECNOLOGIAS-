@@ -306,12 +306,13 @@ function renderServiceProviders(){
   });
 }
 function renderServiceRequests(){
-  const providerCanSeeRequest=r=>currentRole==="fornecedor"&&r.status==="pending"&&serviceProviders.some(p=>{
+  const matchedServiceProvider=r=>serviceProviders.find(p=>{
     if((p.email||"").toLowerCase()!==(currentUser?.email||"").toLowerCase()||!p.is_active||String(p.state||"").toUpperCase()!==String(r.service_state||"").toUpperCase())return false;
     const cats=serviceProviderCategories.filter(x=>x.provider_id===p.id).map(x=>x.category_id);
     const city=String(r.service_city||"").trim().toLowerCase(), providerCity=String(p.city||"").trim().toLowerCase(), area=String(p.service_area||"").toLowerCase();
     return cats.includes(r.category_id)&&(providerCity===city||city.includes(providerCity.split("/")[0])||area.includes(city));
   });
+  const providerCanSeeRequest=r=>currentRole==="fornecedor"&&r.status==="pending"&&!!matchedServiceProvider(r);
   const mine=serviceRequests.filter(r=>isAdmin||r.requester_id===currentUser?.id||providerCanSeeRequest(r));
   const html=mine.map(r=>{
     const provider=serviceProviders.find(p=>p.id===r.provider_id);
@@ -332,7 +333,8 @@ function renderServiceRequests(){
       reviewHtml='<form class="service-review-form" data-service-review="'+esc(r.id)+'" data-provider="'+esc(r.provider_id)+'"><h4>Avalie este serviço</h4><div class="service-rating-grid"><label>Qualidade<select name="quality_rating" required><option value="">Nota</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label><label>Pontualidade<select name="punctuality_rating" required><option value="">Nota</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label><label>Atendimento<select name="service_rating" required><option value="">Nota</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label><label>Custo-benefício<select name="cost_benefit_rating" required><option value="">Nota</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label></div><label>Comentário (opcional)</label><textarea name="comment" maxlength="1500" placeholder="Conte como foi sua experiência."></textarea><button type="submit">ENVIAR AVALIAÇÃO</button></form>';
     }else if(review)reviewHtml='<p class="service-review-sent">✓ Avaliação enviada. Obrigado por ajudar outras empresas a escolherem melhor.</p>';
     const contactDigits=String(r.requester_whatsapp||"").replace(/[^0-9]/g,"");
-    const contactLink=providerCanSeeRequest(r)&&contactDigits?'<a class="whatsapp-link" href="https://wa.me/55'+esc(contactDigits)+'?text='+encodeURIComponent("Olá! Vi sua solicitação no MFR Market e posso conversar sobre o serviço.")+'" target="_blank" rel="noopener noreferrer">CONTATAR SOLICITANTE PELO WHATSAPP</a>':"";
+    const contactPhone=contactDigits.startsWith("55")?contactDigits:"55"+contactDigits;
+    const contactLink=providerCanSeeRequest(r)&&contactDigits?'<a class="whatsapp-link" href="https://wa.me/'+esc(contactPhone)+'?text='+encodeURIComponent("Olá! Vi sua solicitação no MFR Market e posso conversar sobre o serviço.")+'" target="_blank" rel="noopener noreferrer">CONTATAR SOLICITANTE PELO WHATSAPP</a>':"";
     const noContact=providerCanSeeRequest(r)&&!contactDigits?'<small>O solicitante não informou WhatsApp.</small>':"";
     return '<article class="panel service-request-card"><div><b>'+esc(r.title)+'</b><small>'+esc(provider?.business_name||"Solicitação aberta")+' · '+esc(category?.name||"Serviço")+' · '+esc(r.service_city)+'/'+esc(r.service_state)+'</small><span class="service-status">'+statusLabel+'</span><small>Solicitado em '+new Date(r.requested_at).toLocaleDateString("pt-BR")+'</small><p>'+esc(r.description||"")+'</p>'+contactLink+noContact+'</div><div class="service-request-actions">'+actions+'</div>'+reviewHtml+'</article>';
   }).join("");
@@ -341,6 +343,7 @@ function renderServiceRequests(){
     const next=b.dataset.serviceStatus;
     const update={status:next,updated_at:new Date().toISOString()};
     if(next==="completed")update.completed_at=new Date().toISOString();
+    if(next==="in_progress"&&currentRole==="fornecedor"){const request=serviceRequests.find(r=>r.id===b.dataset.serviceId);const matched=matchedServiceProvider(request||{});if(matched)update.provider_id=matched.id;}
     const {error}=await supabaseClient.from("service_requests").update(update).eq("id",b.dataset.serviceId);
     if(error)return alert("Não foi possível atualizar a solicitação: "+error.message);
     await loadServices();
