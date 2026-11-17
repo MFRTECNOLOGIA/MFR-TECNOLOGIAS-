@@ -256,7 +256,7 @@ async function loadServices(){
     supabaseClient.from("service_categories").select("id,name,slug").eq("is_active",true).order("sort_order"),
     supabaseClient.from("service_providers").select("id,business_name,contact_name,description,whatsapp,email,city,state,service_area,is_verified,is_active").eq("is_active",true).order("business_name"),
     supabaseClient.from("service_provider_categories").select("provider_id,category_id"),
-    supabaseClient.from("service_requests").select("id,requester_id,provider_id,category_id,title,description,service_city,service_state,status,requested_at,completed_at").order("requested_at",{ascending:false}),
+    supabaseClient.from("service_requests").select("id,requester_id,requester_whatsapp,provider_id,category_id,title,description,service_city,service_state,status,requested_at,completed_at").order("requested_at",{ascending:false}),
     supabaseClient.from("service_reviews").select("id,request_id,provider_id,reviewer_id,quality_rating,punctuality_rating,service_rating,cost_benefit_rating,comment,is_visible,created_at")
   ]);
   const failed=[catRes,providerRes,providerCatRes,requestRes,reviewRes].find(x=>x.error);
@@ -306,7 +306,13 @@ function renderServiceProviders(){
   });
 }
 function renderServiceRequests(){
-  const mine=serviceRequests.filter(r=>isAdmin||r.requester_id===currentUser?.id);
+  const providerCanSeeRequest=r=>currentRole==="fornecedor"&&r.status==="pending"&&serviceProviders.some(p=>{
+    if((p.email||"").toLowerCase()!==(currentUser?.email||"").toLowerCase()||!p.is_active||String(p.state||"").toUpperCase()!==String(r.service_state||"").toUpperCase())return false;
+    const cats=serviceProviderCategories.filter(x=>x.provider_id===p.id).map(x=>x.category_id);
+    const city=String(r.service_city||"").trim().toLowerCase(), providerCity=String(p.city||"").trim().toLowerCase(), area=String(p.service_area||"").toLowerCase();
+    return cats.includes(r.category_id)&&(providerCity===city||city.includes(providerCity.split("/")[0])||area.includes(city));
+  });
+  const mine=serviceRequests.filter(r=>isAdmin||r.requester_id===currentUser?.id||providerCanSeeRequest(r));
   const html=mine.map(r=>{
     const provider=serviceProviders.find(p=>p.id===r.provider_id);
     const category=serviceCategories.find(c=>c.id===r.category_id);
@@ -316,14 +322,19 @@ function renderServiceRequests(){
     if(isAdmin){
       if(r.status==="pending")actions+='<button data-service-status="in_progress" data-service-id="'+esc(r.id)+'">MARCAR EM ANDAMENTO</button>';
       if(r.status==="in_progress")actions+='<button data-service-status="completed" data-service-id="'+esc(r.id)+'">CONFIRMAR CONCLUSÃO</button><button class="secondary-button" data-service-status="cancelled" data-service-id="'+esc(r.id)+'">CANCELAR</button>';
-    }else if(r.status==="in_progress"){
+    }else if(currentRole==="fornecedor"&&providerCanSeeRequest(r)){
+      actions+='<button data-service-status="in_progress" data-service-id="'+esc(r.id)+'">ACEITAR OPORTUNIDADE</button>';
+    }else if(r.requester_id===currentUser?.id&&r.status==="in_progress"){
       actions+='<button data-service-status="completed" data-service-id="'+esc(r.id)+'">CONFIRMAR CONCLUSÃO</button><button class="secondary-button" data-service-status="cancelled" data-service-id="'+esc(r.id)+'">CANCELAR SOLICITAÇÃO</button>';
     }
     let reviewHtml="";
-    if(r.status==="completed"&&!review&&!isAdmin){
+    if(r.status==="completed"&&!review&&!isAdmin&&r.requester_id===currentUser?.id){
       reviewHtml='<form class="service-review-form" data-service-review="'+esc(r.id)+'" data-provider="'+esc(r.provider_id)+'"><h4>Avalie este serviço</h4><div class="service-rating-grid"><label>Qualidade<select name="quality_rating" required><option value="">Nota</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label><label>Pontualidade<select name="punctuality_rating" required><option value="">Nota</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label><label>Atendimento<select name="service_rating" required><option value="">Nota</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label><label>Custo-benefício<select name="cost_benefit_rating" required><option value="">Nota</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label></div><label>Comentário (opcional)</label><textarea name="comment" maxlength="1500" placeholder="Conte como foi sua experiência."></textarea><button type="submit">ENVIAR AVALIAÇÃO</button></form>';
     }else if(review)reviewHtml='<p class="service-review-sent">✓ Avaliação enviada. Obrigado por ajudar outras empresas a escolherem melhor.</p>';
-    return '<article class="panel service-request-card"><div><b>'+esc(r.title)+'</b><small>'+esc(provider?.business_name||"Prestador")+' · '+esc(category?.name||"Serviço")+' · '+esc(r.service_city)+'/'+esc(r.service_state)+'</small><span class="service-status">'+statusLabel+'</span><small>Solicitado em '+new Date(r.requested_at).toLocaleDateString("pt-BR")+'</small><p>'+esc(r.description||"")+'</p></div><div class="service-request-actions">'+actions+'</div>'+reviewHtml+'</article>';
+    const contactDigits=String(r.requester_whatsapp||"").replace(/[^0-9]/g,"");
+    const contactLink=providerCanSeeRequest(r)&&contactDigits?'<a class="whatsapp-link" href="https://wa.me/55'+esc(contactDigits)+'?text='+encodeURIComponent("Olá! Vi sua solicitação no MFR Market e posso conversar sobre o serviço.")+'" target="_blank" rel="noopener noreferrer">CONTATAR SOLICITANTE PELO WHATSAPP</a>':"";
+    const noContact=providerCanSeeRequest(r)&&!contactDigits?'<small>O solicitante não informou WhatsApp.</small>':"";
+    return '<article class="panel service-request-card"><div><b>'+esc(r.title)+'</b><small>'+esc(provider?.business_name||"Solicitação aberta")+' · '+esc(category?.name||"Serviço")+' · '+esc(r.service_city)+'/'+esc(r.service_state)+'</small><span class="service-status">'+statusLabel+'</span><small>Solicitado em '+new Date(r.requested_at).toLocaleDateString("pt-BR")+'</small><p>'+esc(r.description||"")+'</p>'+contactLink+noContact+'</div><div class="service-request-actions">'+actions+'</div>'+reviewHtml+'</article>';
   }).join("");
   $("serviceRequestList").innerHTML=html||'<div class="empty">Você ainda não fez solicitações de serviços.</div>';
   document.querySelectorAll("[data-service-status]").forEach(b=>b.onclick=async()=>{
@@ -361,7 +372,7 @@ $("serviceProviderForm").addEventListener("submit",async e=>{
 });
 $("serviceRequestForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  const row={requester_id:currentUser.id,provider_id:$("serviceRequestProviderId").value,category_id:$("serviceRequestCategoryId").value,title:$("serviceRequestTitle").value.trim(),description:$("serviceRequestDescription").value.trim()||null,service_city:$("serviceRequestCity").value.trim(),service_state:$("serviceRequestState").value.trim().toUpperCase()};
+  const row={requester_id:currentUser.id,requester_whatsapp:$("serviceRequestWhatsapp").value.replace(/[^0-9]/g,""),provider_id:$("serviceRequestProviderId").value,category_id:$("serviceRequestCategoryId").value,title:$("serviceRequestTitle").value.trim(),description:$("serviceRequestDescription").value.trim()||null,service_city:$("serviceRequestCity").value.trim(),service_state:$("serviceRequestState").value.trim().toUpperCase()};
   const {error}=await supabaseClient.from("service_requests").insert(row);
   if(error)return message("serviceRequestMessage","Não foi possível enviar: "+error.message,"error");
   e.target.reset();$("serviceRequestState").value="SC";$("serviceRequestFormWrap").classList.add("hidden");message("serviceRequestMessage","Solicitação enviada!","success");await loadServices();alert("Solicitação enviada ao prestador. Acompanhe o andamento nesta área.");
