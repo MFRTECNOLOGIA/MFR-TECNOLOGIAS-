@@ -309,7 +309,8 @@ function renderServiceRequests(){
   const matchedServiceProvider=r=>serviceProviders.find(p=>{
     if((p.email||"").toLowerCase()!==(currentUser?.email||"").toLowerCase()||!p.is_active||String(p.state||"").toUpperCase()!==String(r.service_state||"").toUpperCase())return false;
     const cats=serviceProviderCategories.filter(x=>x.provider_id===p.id).map(x=>x.category_id);
-    const city=String(r.service_city||"").trim().toLowerCase(), providerCity=String(p.city||"").trim().toLowerCase(), area=String(p.service_area||"").toLowerCase();
+    const norm=v=>String(v||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").trim().toLowerCase();
+    const city=norm(r.service_city), providerCity=norm(p.city), area=norm(p.service_area);
     return cats.includes(r.category_id)&&(providerCity===city||city.includes(providerCity.split("/")[0])||area.includes(city));
   });
   const providerCanSeeRequest=r=>currentRole==="fornecedor"&&r.status==="pending"&&!!matchedServiceProvider(r);
@@ -376,7 +377,9 @@ $("serviceProviderForm").addEventListener("submit",async e=>{
 });
 $("serviceRequestForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  const row={requester_id:currentUser.id,requester_whatsapp:$("serviceRequestWhatsapp").value.replace(/[^0-9]/g,""),provider_id:$("serviceRequestProviderId").value,category_id:$("serviceRequestCategoryId").value,title:$("serviceRequestTitle").value.trim(),description:$("serviceRequestDescription").value.trim()||null,service_city:$("serviceRequestCity").value.trim(),service_state:$("serviceRequestState").value.trim().toUpperCase()};
+  const requesterPhone=$("serviceRequestWhatsapp").value.replace(/[^0-9]/g,"");
+  if(!/^[0-9]{10,13}$/.test(requesterPhone))return message("serviceRequestMessage","Informe um WhatsApp válido com DDD.","error");
+  const row={requester_id:currentUser.id,requester_whatsapp:requesterPhone,provider_id:$("serviceRequestProviderId").value,category_id:$("serviceRequestCategoryId").value,title:$("serviceRequestTitle").value.trim(),description:$("serviceRequestDescription").value.trim()||null,service_city:$("serviceRequestCity").value.trim(),service_state:$("serviceRequestState").value.trim().toUpperCase()};
   const {error}=await supabaseClient.from("service_requests").insert(row);
   if(error)return message("serviceRequestMessage","Não foi possível enviar: "+error.message,"error");
   e.target.reset();$("serviceRequestState").value="SC";$("serviceRequestFormWrap").classList.add("hidden");message("serviceRequestMessage","Solicitação enviada!","success");await loadServices();alert("Solicitação enviada ao prestador. Acompanhe o andamento nesta área.");
