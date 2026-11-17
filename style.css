@@ -123,3 +123,13 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
   .service-card-actions{align-items:stretch}
   .service-card-actions>*{flex:1 1 100%;text-align:center}
 }
+
+
+/* Galeria de fotos dos produtos do catálogo MFR */
+.product-item,.quote-item,.best-price-item{align-items:center}
+.product-thumb{display:block;flex:0 0 76px;width:76px;height:76px;object-fit:cover;border-radius:12px;border:1px solid #41414b;background:#101014}
+.product-placeholder{display:grid;place-items:center;color:#85858f;font-size:9px;font-weight:850;letter-spacing:.06em;background:linear-gradient(145deg,#24242b,#111116)}
+.product-item-info,.quote-item-info,.best-price-info{flex:1;min-width:0}
+#pImages{padding:10px;background:#121217}
+#productImageMessage{margin:8px 0 0}
+@media(max-width:620px){.product-thumb{flex-basis:64px;width:64px;height:64px}.product-item,.quote-item,.best-price-item{display:flex;align-items:center;gap:11px}}
