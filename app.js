@@ -364,7 +364,7 @@ $("serviceRequestForm").addEventListener("submit",async e=>{
   const row={requester_id:currentUser.id,provider_id:$("serviceRequestProviderId").value,category_id:$("serviceRequestCategoryId").value,title:$("serviceRequestTitle").value.trim(),description:$("serviceRequestDescription").value.trim()||null,service_city:$("serviceRequestCity").value.trim(),service_state:$("serviceRequestState").value.trim().toUpperCase()};
   const {error}=await supabaseClient.from("service_requests").insert(row);
   if(error)return message("serviceRequestMessage","Não foi possível enviar: "+error.message,"error");
-  e.target.reset();$("serviceState").value="SC";$("serviceRequestFormWrap").classList.add("hidden");message("serviceRequestMessage","Solicitação enviada!","success");await loadServices();alert("Solicitação enviada ao prestador. Acompanhe o andamento nesta área.");
+  e.target.reset();$("serviceRequestState").value="SC";$("serviceRequestFormWrap").classList.add("hidden");message("serviceRequestMessage","Solicitação enviada!","success");await loadServices();alert("Solicitação enviada ao prestador. Acompanhe o andamento nesta área.");
 });
 $("cancelServiceRequest").addEventListener("click",()=>$("serviceRequestFormWrap").classList.add("hidden"));
 
