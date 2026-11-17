@@ -368,7 +368,7 @@ $("serviceProviderForm").addEventListener("submit",async e=>{
   if(!categories.length)return message("serviceProviderMessage","Selecione ao menos uma categoria.","error");
   const whatsapp=String($("serviceWhatsapp").value||"").replace(/[^0-9]/g,"");
   if(!/^[0-9]{10,13}$/.test(whatsapp))return message("serviceProviderMessage","Informe um WhatsApp válido com DDD e código do país opcional.","error");
-  const row={business_name:$("serviceBusinessName").value.trim(),contact_name:$("serviceContactName").value.trim()||null,whatsapp,email:$("serviceEmail").value.trim()||null,city:$("serviceCity").value.trim(),state:$("serviceState").value.trim().toUpperCase(),service_area:$("serviceArea").value.trim()||null,description:$("serviceDescription").value.trim()||null,is_verified:$("serviceVerified").checked,created_by:currentUser.id};
+  const row={business_name:$("serviceBusinessName").value.trim(),contact_name:$("serviceContactName").value.trim()||null,whatsapp,email:$("serviceEmail").value.trim().toLowerCase()||null,city:$("serviceCity").value.trim(),state:$("serviceState").value.trim().toUpperCase(),service_area:$("serviceArea").value.trim()||null,description:$("serviceDescription").value.trim()||null,is_verified:$("serviceVerified").checked,created_by:currentUser.id};
   const {data,error}=await supabaseClient.from("service_providers").insert(row).select("id").single();
   if(error)return message("serviceProviderMessage","Erro ao cadastrar prestador: "+error.message,"error");
   const {error:categoryError}=await supabaseClient.from("service_provider_categories").insert(categories.map(category_id=>({provider_id:data.id,category_id})));
