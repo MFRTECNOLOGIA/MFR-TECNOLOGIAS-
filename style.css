@@ -133,3 +133,8 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
 #pImages{padding:10px;background:#121217}
 #productImageMessage{margin:8px 0 0}
 @media(max-width:620px){.product-thumb{flex-basis:64px;width:64px;height:64px}.product-item,.quote-item,.best-price-item{display:flex;align-items:center;gap:11px}}
+
+.product-gallery{display:flex;flex:0 0 auto;gap:6px;max-width:min(100%,520px);overflow-x:auto;padding:2px}
+.product-gallery a{display:block;flex:0 0 68px;width:68px;height:68px}
+.product-gallery img{display:block;width:68px;height:68px;object-fit:cover;border:1px solid #41414b;border-radius:9px;background:#101014}
+@media(max-width:620px){.product-gallery a,.product-gallery img{flex-basis:54px;width:54px;height:54px}}
