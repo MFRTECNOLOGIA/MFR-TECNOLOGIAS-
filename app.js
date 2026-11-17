@@ -108,6 +108,10 @@ function productThumb(p){
   const url=Array.isArray(p?.image_urls)?p.image_urls[0]:"";
   return url ? '<img class="product-thumb" src="'+esc(url)+'" alt="Foto de '+esc(p?.name||"produto")+'" loading="lazy">' : '<div class="product-thumb product-placeholder">SEM FOTO</div>';
 }
+function productGallery(p){
+  const urls=Array.isArray(p?.image_urls)?p.image_urls:[];
+  return urls.length?'<div class="product-gallery">'+urls.map((url,i)=>'<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" aria-label="Abrir foto '+(i+1)+' de '+esc(p?.name||"produto")+'"><img src="'+esc(url)+'" alt="'+esc(p?.name||"Produto")+' - foto '+(i+1)+'" loading="lazy"></a>').join("")+'</div>':'<div class="product-thumb product-placeholder">SEM FOTO</div>';
+}
 function render(){
   $("countProducts").textContent=products.length;
   $("countPrices").textContent=prices.length;
@@ -116,7 +120,7 @@ function render(){
   const productTerm=($("productSearch")?.value||"").toLocaleLowerCase("pt-BR");
   const category=$("productCategoryFilter")?.value||"";
   const shownProducts=products.filter(p=>(!category||p.category===category)&&(!productTerm||p.name.toLocaleLowerCase("pt-BR").includes(productTerm)));
-  $("productList").innerHTML=shownProducts.length?shownProducts.map(p=>'<div class="item product-item">'+productThumb(p)+'<div class="product-item-info"><b>'+esc(p.name)+'</b><small>'+esc(p.category||"Sem categoria")+(p.sku?" • "+esc(p.sku):"")+'</small><small>'+(Array.isArray(p.image_urls)?p.image_urls.length:0)+' foto(s)</small></div></div>').join(""):'<div class="empty">Nenhum produto encontrado.</div>';
+  $("productList").innerHTML=shownProducts.length?shownProducts.map(p=>'<div class="item product-item">'+productGallery(p)+'<div class="product-item-info"><b>'+esc(p.name)+'</b><small>'+esc(p.category||"Sem categoria")+(p.sku?" • "+esc(p.sku):"")+'</small><small>'+(Array.isArray(p.image_urls)?p.image_urls.length:0)+' foto(s)</small></div></div>').join(""):'<div class="empty">Nenhum produto encontrado.</div>';
   const term=($("quoteSearch")?.value||"").toLocaleLowerCase("pt-BR");
   const shownQuotes=prices.filter(q=>{const p=products.find(x=>x.id===q.product_id);return !term||((p?.name||"").toLocaleLowerCase("pt-BR").includes(term))||q.store.toLocaleLowerCase("pt-BR").includes(term)}).sort((a,b)=>total(a)-total(b));
   $("priceList").innerHTML=shownQuotes.length?shownQuotes.map(q=>{
