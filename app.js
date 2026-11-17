@@ -4,7 +4,7 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_nGJ-UEn8kzof785jGuKFCA_N3g1RZux
 const ADMIN_EMAIL = "xavofelipe@gmail.com";
 const $ = id => document.getElementById(id);
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-let currentUser=null, currentRole=null, isAdmin=false, products=[], prices=[], accessUsers=[], supplierProfiles=[], buyerRequests=[], requestOffers=[];
+let currentUser=null, currentRole=null, isAdmin=false, products=[], prices=[], accessUsers=[], supplierProfiles=[], buyerRequests=[], requestOffers=[], serviceCategories=[], serviceProviders=[], serviceProviderCategories=[], serviceRequests=[], serviceReviews=[];
 const money=n=>Number(n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const num=s=>{const v=String(s??"0").trim().replace(/\./g,"").replace(",",".");const n=Number(v);return Number.isFinite(n)?n:0};
@@ -48,6 +48,7 @@ function allowedTabs(){
   $("requestsTab").classList.toggle("hidden",isAdmin);
   $("requestCreateForm").classList.toggle("hidden",!buyer);
   $("supplierCategoryBox").classList.toggle("hidden",!(supplier||isAdmin));
+  $("servicesTab").classList.toggle("hidden",!(buyer||supplier||isAdmin));
   $("productsTab").classList.toggle("hidden",!isAdmin);
   $("homeAddProduct").classList.toggle("hidden",!isAdmin);
   $("homeAddQuote").classList.toggle("hidden",buyer);
@@ -68,12 +69,14 @@ function tab(name){
   if(name==="reports"&&currentRole==="fornecedor")return;
   if(name==="supplierProfile"&&currentRole!=="fornecedor"&&!isAdmin)return;
   if(name==="requests"&&isAdmin)return;
+  if(name==="services"&&!["comprador","fornecedor"].includes(currentRole)&&!isAdmin)return;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("hidden",x.id!==name));
   document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));
   if(name==="admin"&&isAdmin)loadAccessList();
   if(name==="reports")renderReports();
   if(name==="supplierProfile")loadSupplierProfile();
   if(name==="requests")renderBuyerRequests();
+  if(name==="services")loadServices();
 }
 document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.tab)));
 document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.go)));
@@ -234,6 +237,136 @@ $("requestCreateForm").addEventListener("submit",async e=>{
   if(error)return alert("Não foi possível publicar: "+error.message);
   e.target.reset();await loadData();renderBuyerRequests();alert("Solicitação publicada! Fornecedores da categoria selecionada poderão enviar propostas.");
 });
+
+
+/* MFR Serviços + MFR Avalia */
+function serviceAverage(reviews){
+  const visible=(reviews||[]).filter(r=>r.is_visible!==false);
+  if(!visible.length)return 0;
+  const sum=visible.reduce((acc,r)=>acc+Number(r.quality_rating||0)+Number(r.punctuality_rating||0)+Number(r.service_rating||0)+Number(r.cost_benefit_rating||0),0);
+  return sum/(visible.length*4);
+}
+function serviceRatingStars(value){
+  const rounded=Math.round(Number(value||0));
+  return "★".repeat(rounded)+"☆".repeat(5-rounded);
+}
+async function loadServices(){
+  if(!currentUser||!["comprador","fornecedor","admin"].includes(currentRole))return;
+  const [catRes,providerRes,providerCatRes,requestRes,reviewRes]=await Promise.all([
+    supabaseClient.from("service_categories").select("id,name,slug").eq("is_active",true).order("sort_order"),
+    supabaseClient.from("service_providers").select("id,business_name,contact_name,description,whatsapp,email,city,state,service_area,is_verified,is_active").eq("is_active",true).order("business_name"),
+    supabaseClient.from("service_provider_categories").select("provider_id,category_id"),
+    supabaseClient.from("service_requests").select("id,requester_id,provider_id,category_id,title,description,service_city,service_state,status,requested_at,completed_at").order("requested_at",{ascending:false}),
+    supabaseClient.from("service_reviews").select("id,request_id,provider_id,reviewer_id,quality_rating,punctuality_rating,service_rating,cost_benefit_rating,comment,is_visible,created_at")
+  ]);
+  const failed=[catRes,providerRes,providerCatRes,requestRes,reviewRes].find(x=>x.error);
+  if(failed){$("serviceProviderList").innerHTML='<div class="empty">Não foi possível carregar os serviços: '+esc(failed.error.message)+'</div>';return}
+  serviceCategories=catRes.data||[];
+  serviceProviders=providerRes.data||[];
+  serviceProviderCategories=providerCatRes.data||[];
+  serviceRequests=requestRes.data||[];
+  serviceReviews=reviewRes.data||[];
+  const categoryFilter=$("serviceCategoryFilter"),providerCategorySelect=$("serviceProviderCategories");
+  const currentFilter=categoryFilter.value;
+  categoryFilter.innerHTML='<option value="">Todas as categorias</option>'+serviceCategories.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join("");
+  if(serviceCategories.some(c=>c.id===currentFilter))categoryFilter.value=currentFilter;
+  providerCategorySelect.innerHTML=serviceCategories.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join("");
+  $("serviceProviderFormWrap").classList.toggle("hidden",!isAdmin);
+  renderServiceProviders();
+  renderServiceRequests();
+}
+function renderServiceProviders(){
+  const categoryId=$("serviceCategoryFilter").value;
+  const term=$("serviceSearch").value.trim().toLocaleLowerCase("pt-BR");
+  const sort=$("serviceSort").value;
+  let rows=serviceProviders.map(p=>{
+    const categoryIds=serviceProviderCategories.filter(x=>x.provider_id===p.id).map(x=>x.category_id);
+    const categories=serviceCategories.filter(c=>categoryIds.includes(c.id));
+    const reviews=serviceReviews.filter(r=>r.provider_id===p.id&&r.is_visible!==false);
+    return {...p,categories,reviews,average:serviceAverage(reviews)};
+  }).filter(p=>(!categoryId||p.categories.some(c=>c.id===categoryId))&&(!term||[p.business_name,p.contact_name,p.description,p.city,p.service_area,...p.categories.map(c=>c.name)].filter(Boolean).join(" ").toLocaleLowerCase("pt-BR").includes(term)));
+  if(sort==="name")rows.sort((a,b)=>a.business_name.localeCompare(b.business_name,"pt-BR"));
+  else if(sort==="reviews")rows.sort((a,b)=>b.reviews.length-a.reviews.length||b.average-a.average);
+  else rows.sort((a,b)=>b.average-a.average||b.reviews.length-a.reviews.length||a.business_name.localeCompare(b.business_name,"pt-BR"));
+  $("serviceProviderList").innerHTML=rows.length?rows.map(p=>{
+    const digits=String(p.whatsapp||"").replace(/[^0-9]/g,"");
+    const wa=digits?'<a class="whatsapp-link" href="https://wa.me/55'+esc(digits)+'?text='+encodeURIComponent("Olá! Encontrei seu contato no MFR Market e gostaria de informações sobre seus serviços.")+'" target="_blank" rel="noopener noreferrer">CONTATAR PELO WHATSAPP</a>':"";
+    const rating=p.reviews.length?'<strong class="service-rating">'+serviceRatingStars(p.average)+' '+p.average.toFixed(1).replace(".",",")+'/5</strong><small>'+p.reviews.length+' avaliação(ões) verificadas por solicitação</small>':'<strong class="service-rating service-no-rating">Ainda sem avaliações</strong><small>Este prestador está começando na rede MFR.</small>';
+    const cats=p.categories.map(c=>'<span class="service-chip">'+esc(c.name)+'</span>').join("");
+    const verify=p.is_verified?'<span class="service-verified">✓ Prestador verificado pela MFR</span>':'<span class="service-unverified">Cadastro publicado na rede MFR</span>';
+    const requestCategory=(categoryId&&p.categories.some(c=>c.id===categoryId))?categoryId:(p.categories[0]?.id||"");
+    return '<article class="panel service-provider-card"><div class="service-card-top"><div><h3>'+esc(p.business_name)+'</h3><small>'+esc(p.city)+'/'+esc(p.state)+(p.service_area?' · Atende: '+esc(p.service_area):"")+'</small></div>'+verify+'</div><div class="service-chips">'+cats+'</div><p>'+esc(p.description||"Entre em contato para consultar especialidades, disponibilidade e orçamento.")+'</p><div class="service-rating-block">'+rating+'</div><div class="service-card-actions">'+wa+'<button type="button" data-service-request="'+esc(p.id)+'" data-category-id="'+esc(requestCategory)+'">SOLICITAR SERVIÇO</button></div></article>';
+  }).join(""):'<div class="empty">Nenhum prestador encontrado para este filtro. Tente outra categoria ou volte mais tarde.</div>';
+  document.querySelectorAll("[data-service-request]").forEach(b=>b.onclick=()=>{
+    $("serviceRequestProviderId").value=b.dataset.serviceRequest;
+    $("serviceRequestCategoryId").value=b.dataset.categoryId;
+    $("serviceRequestFormWrap").classList.remove("hidden");
+    $("serviceRequestTitle").focus();
+    $("serviceRequestFormWrap").scrollIntoView({behavior:"smooth",block:"start"});
+  });
+}
+function renderServiceRequests(){
+  const mine=serviceRequests.filter(r=>isAdmin||r.requester_id===currentUser?.id);
+  const html=mine.map(r=>{
+    const provider=serviceProviders.find(p=>p.id===r.provider_id);
+    const category=serviceCategories.find(c=>c.id===r.category_id);
+    const review=serviceReviews.find(x=>x.request_id===r.id);
+    const statusLabel={pending:"Aguardando contato",in_progress:"Em andamento",completed:"Concluído",cancelled:"Cancelado"}[r.status]||r.status;
+    let actions="";
+    if(isAdmin){
+      if(r.status==="pending")actions+='<button data-service-status="in_progress" data-service-id="'+esc(r.id)+'">MARCAR EM ANDAMENTO</button>';
+      if(r.status==="in_progress")actions+='<button data-service-status="completed" data-service-id="'+esc(r.id)+'">CONFIRMAR CONCLUSÃO</button><button class="secondary-button" data-service-status="cancelled" data-service-id="'+esc(r.id)+'">CANCELAR</button>';
+    }else if(r.status==="in_progress"){
+      actions+='<button data-service-status="completed" data-service-id="'+esc(r.id)+'">CONFIRMAR CONCLUSÃO</button><button class="secondary-button" data-service-status="cancelled" data-service-id="'+esc(r.id)+'">CANCELAR SOLICITAÇÃO</button>';
+    }
+    let reviewHtml="";
+    if(r.status==="completed"&&!review&&!isAdmin){
+      reviewHtml='<form class="service-review-form" data-service-review="'+esc(r.id)+'" data-provider="'+esc(r.provider_id)+'"><h4>Avalie este serviço</h4><div class="service-rating-grid"><label>Qualidade<select name="quality_rating" required><option value="">Nota</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label><label>Pontualidade<select name="punctuality_rating" required><option value="">Nota</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label><label>Atendimento<select name="service_rating" required><option value="">Nota</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label><label>Custo-benefício<select name="cost_benefit_rating" required><option value="">Nota</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label></div><label>Comentário (opcional)</label><textarea name="comment" maxlength="1500" placeholder="Conte como foi sua experiência."></textarea><button type="submit">ENVIAR AVALIAÇÃO</button></form>';
+    }else if(review)reviewHtml='<p class="service-review-sent">✓ Avaliação enviada. Obrigado por ajudar outras empresas a escolherem melhor.</p>';
+    return '<article class="panel service-request-card"><div><b>'+esc(r.title)+'</b><small>'+esc(provider?.business_name||"Prestador")+' · '+esc(category?.name||"Serviço")+' · '+esc(r.service_city)+'/'+esc(r.service_state)+'</small><span class="service-status">'+statusLabel+'</span><small>Solicitado em '+new Date(r.requested_at).toLocaleDateString("pt-BR")+'</small><p>'+esc(r.description||"")+'</p></div><div class="service-request-actions">'+actions+'</div>'+reviewHtml+'</article>';
+  }).join("");
+  $("serviceRequestList").innerHTML=html||'<div class="empty">Você ainda não fez solicitações de serviços.</div>';
+  document.querySelectorAll("[data-service-status]").forEach(b=>b.onclick=async()=>{
+    const next=b.dataset.serviceStatus;
+    const update={status:next,updated_at:new Date().toISOString()};
+    if(next==="completed")update.completed_at=new Date().toISOString();
+    const {error}=await supabaseClient.from("service_requests").update(update).eq("id",b.dataset.serviceId);
+    if(error)return alert("Não foi possível atualizar a solicitação: "+error.message);
+    await loadServices();
+  });
+  document.querySelectorAll("[data-service-review]").forEach(form=>form.onsubmit=async e=>{
+    e.preventDefault();
+    const fd=new FormData(form);
+    const row={request_id:form.dataset.serviceReview,provider_id:form.dataset.provider,reviewer_id:currentUser.id,quality_rating:Number(fd.get("quality_rating")),punctuality_rating:Number(fd.get("punctuality_rating")),service_rating:Number(fd.get("service_rating")),cost_benefit_rating:Number(fd.get("cost_benefit_rating")),comment:String(fd.get("comment")||"").trim()||null};
+    const {error}=await supabaseClient.from("service_reviews").insert(row);
+    if(error)return alert("Não foi possível enviar a avaliação: "+error.message);
+    await loadServices();alert("Avaliação enviada! Obrigado por fortalecer a confiança na rede MFR.");
+  });
+}
+$("serviceCategoryFilter").addEventListener("change",renderServiceProviders);
+$("serviceSearch").addEventListener("input",renderServiceProviders);
+$("serviceSort").addEventListener("change",renderServiceProviders);
+$("serviceProviderForm").addEventListener("submit",async e=>{
+  e.preventDefault();if(!isAdmin)return;
+  const categories=[...$("serviceProviderCategories").selectedOptions].map(o=>o.value);
+  if(!categories.length)return message("serviceProviderMessage","Selecione ao menos uma categoria.","error");
+  const whatsapp=String($("serviceWhatsapp").value||"").replace(/[^0-9]/g,"");
+  if(!/^[0-9]{10,13}$/.test(whatsapp))return message("serviceProviderMessage","Informe um WhatsApp válido com DDD e código do país opcional.","error");
+  const row={business_name:$("serviceBusinessName").value.trim(),contact_name:$("serviceContactName").value.trim()||null,whatsapp,email:$("serviceEmail").value.trim()||null,city:$("serviceCity").value.trim(),state:$("serviceState").value.trim().toUpperCase(),service_area:$("serviceArea").value.trim()||null,description:$("serviceDescription").value.trim()||null,is_verified:$("serviceVerified").checked,created_by:currentUser.id};
+  const {data,error}=await supabaseClient.from("service_providers").insert(row).select("id").single();
+  if(error)return message("serviceProviderMessage","Erro ao cadastrar prestador: "+error.message,"error");
+  const {error:categoryError}=await supabaseClient.from("service_provider_categories").insert(categories.map(category_id=>({provider_id:data.id,category_id})));
+  if(categoryError)return message("serviceProviderMessage","Prestador cadastrado, mas houve erro ao vincular categorias: "+categoryError.message,"error");
+  e.target.reset();$("serviceState").value="SC";message("serviceProviderMessage","Prestador cadastrado com sucesso!","success");await loadServices();
+});
+$("serviceRequestForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const row={requester_id:currentUser.id,provider_id:$("serviceRequestProviderId").value,category_id:$("serviceRequestCategoryId").value,title:$("serviceRequestTitle").value.trim(),description:$("serviceRequestDescription").value.trim()||null,service_city:$("serviceRequestCity").value.trim(),service_state:$("serviceRequestState").value.trim().toUpperCase()};
+  const {error}=await supabaseClient.from("service_requests").insert(row);
+  if(error)return message("serviceRequestMessage","Não foi possível enviar: "+error.message,"error");
+  e.target.reset();$("serviceState").value="SC";$("serviceRequestFormWrap").classList.add("hidden");message("serviceRequestMessage","Solicitação enviada!","success");await loadServices();alert("Solicitação enviada ao prestador. Acompanhe o andamento nesta área.");
+});
+$("cancelServiceRequest").addEventListener("click",()=>$("serviceRequestFormWrap").classList.add("hidden"));
 
 async function checkSession(session){
   currentUser=session?.user||null;
