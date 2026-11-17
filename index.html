@@ -267,6 +267,13 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
       </section>
     </main>
   </section>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js?v=20261117-show-categories-2"></script>
 </body>
