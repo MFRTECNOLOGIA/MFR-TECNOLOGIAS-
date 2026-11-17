@@ -8,6 +8,38 @@ let currentUser=null, currentRole=null, isAdmin=false, products=[], prices=[], a
 const money=n=>Number(n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const num=s=>{const v=String(s??"0").trim().replace(/\./g,"").replace(",",".");const n=Number(v);return Number.isFinite(n)?n:0};
+
+/* Contadores públicos: visitantes únicos do dia e visitantes ativos nos últimos 5 minutos. */
+function getMfrVisitorId(){
+  const key="mfr_market_visitor_id";
+  let id=localStorage.getItem(key);
+  if(!id){
+    id=crypto.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{
+      const r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16);
+    });
+    localStorage.setItem(key,id);
+  }
+  return id;
+}
+function paintVisitorStats(today,online){
+  const t=Number(today||0),o=Number(online||0);
+  ["visitorToday","visitorTodayLogin"].forEach(id=>{const el=$(id);if(el)el.textContent=t.toLocaleString("pt-BR")});
+  ["visitorOnline","visitorOnlineLogin"].forEach(id=>{const el=$(id);if(el)el.textContent=o.toLocaleString("pt-BR")});
+}
+async function updateMfrVisitorStats(){
+  try{
+    const {data,error}=await supabaseClient.rpc("mfr_record_site_visit",{p_visitor_id:getMfrVisitorId()});
+    if(error)throw error;
+    const stats=Array.isArray(data)?data[0]:data;
+    if(stats)paintVisitorStats(stats.visitors_today,stats.people_online);
+  }catch(err){
+    console.warn("Contadores públicos indisponíveis:",err.message);
+    ["visitorToday","visitorTodayLogin","visitorOnline","visitorOnlineLogin"].forEach(id=>{const el=$(id);if(el)el.textContent="—"});
+  }
+}
+updateMfrVisitorStats();
+setInterval(updateMfrVisitorStats,60000);
+
 function message(id,text,kind=""){const el=$(id);if(el){el.textContent=text;el.className="notice "+kind}}
 function show(view){["loginView","pendingView","appView"].forEach(id=>$(id).classList.toggle("hidden",id!==view))}
 function allowedTabs(){
