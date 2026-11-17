@@ -1,4 +1,4 @@
-const CACHE = 'mfr-market-v20261117-1';
+const CACHE = 'mfr-market-v20261117-services-1';
 const FILES = ['./', './index.html', './style.css', './app.js', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', event => {
