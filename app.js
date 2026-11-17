@@ -15,7 +15,7 @@ function allowedTabs(){
   $("supplierProfileTab").classList.toggle("hidden",!(supplier||isAdmin));
   $("requestsTab").classList.toggle("hidden",isAdmin);
   $("requestCreateForm").classList.toggle("hidden",!buyer);
-  $("supplierCategoryBox").classList.toggle("hidden",!supplier);
+  $("supplierCategoryBox").classList.toggle("hidden",!(supplier||isAdmin));
   $("productsTab").classList.toggle("hidden",!isAdmin);
   $("homeAddProduct").classList.toggle("hidden",!isAdmin);
   $("homeAddQuote").classList.toggle("hidden",buyer);
