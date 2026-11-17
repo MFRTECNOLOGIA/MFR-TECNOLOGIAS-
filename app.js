@@ -71,7 +71,7 @@ function tab(name){
   if(name==="prices"&&currentRole==="prestador")return;
   if(name==="supplierProfile"&&currentRole!=="fornecedor"&&!isAdmin)return;
   if(name==="requests"&&isAdmin)return;
-  if(name==="services"&&!["comprador","fornecedor"].includes(currentRole)&&!isAdmin)return;
+  if(name==="services"&&!["comprador","fornecedor","prestador"].includes(currentRole)&&!isAdmin)return;
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("hidden",x.id!==name));
   document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));
   if(name==="admin"&&isAdmin)loadAccessList();
@@ -297,7 +297,8 @@ function renderServiceProviders(){
     const cats=p.categories.map(c=>'<span class="service-chip">'+esc(c.name)+'</span>').join("");
     const verify=p.is_verified?'<span class="service-verified">✓ Prestador verificado pela MFR</span>':'<span class="service-unverified">Cadastro publicado na rede MFR</span>';
     const requestCategory=(categoryId&&p.categories.some(c=>c.id===categoryId))?categoryId:(p.categories[0]?.id||"");
-    return '<article class="panel service-provider-card"><div class="service-card-top"><div><h3>'+esc(p.business_name)+'</h3><small>'+esc(p.city)+'/'+esc(p.state)+(p.service_area?' · Atende: '+esc(p.service_area):"")+'</small></div>'+verify+'</div><div class="service-chips">'+cats+'</div><p>'+esc(p.description||"Entre em contato para consultar especialidades, disponibilidade e orçamento.")+'</p><div class="service-rating-block">'+rating+'</div><div class="service-card-actions">'+wa+'<button type="button" data-service-request="'+esc(p.id)+'" data-category-id="'+esc(requestCategory)+'">SOLICITAR SERVIÇO</button></div></article>';
+    const requestButton=currentRole==="comprador"?'<button type="button" data-service-request="'+esc(p.id)+'" data-category-id="'+esc(requestCategory)+'">SOLICITAR SERVIÇO</button>':"";
+    return '<article class="panel service-provider-card"><div class="service-card-top"><div><h3>'+esc(p.business_name)+'</h3><small>'+esc(p.city)+'/'+esc(p.state)+(p.service_area?' · Atende: '+esc(p.service_area):"") +'</small></div>'+verify+'</div><div class="service-chips">'+cats+'</div><p>'+esc(p.description||"Entre em contato para consultar especialidades, disponibilidade e orçamento.")+'</p><div class="service-rating-block">'+rating+'</div><div class="service-card-actions">'+wa+requestButton+'</div></article>';
   }).join(""):'<div class="empty">Nenhum prestador encontrado para este filtro. Tente outra categoria ou volte mais tarde.</div>';
   document.querySelectorAll("[data-service-request]").forEach(b=>b.onclick=()=>{
     $("serviceRequestProviderId").value=b.dataset.serviceRequest;
