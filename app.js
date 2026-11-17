@@ -313,7 +313,8 @@ function renderServiceRequests(){
     return cats.includes(r.category_id)&&(providerCity===city||city.includes(providerCity.split("/")[0])||area.includes(city));
   });
   const providerCanSeeRequest=r=>currentRole==="fornecedor"&&r.status==="pending"&&!!matchedServiceProvider(r);
-  const mine=serviceRequests.filter(r=>isAdmin||r.requester_id===currentUser?.id||providerCanSeeRequest(r));
+  const providerOwnsRequest=r=>currentRole==="fornecedor"&&r.status==="in_progress"&&matchedServiceProvider(r)?.id===r.provider_id;
+  const mine=serviceRequests.filter(r=>isAdmin||r.requester_id===currentUser?.id||providerCanSeeRequest(r)||providerOwnsRequest(r));
   const html=mine.map(r=>{
     const provider=serviceProviders.find(p=>p.id===r.provider_id);
     const category=serviceCategories.find(c=>c.id===r.category_id);
@@ -334,8 +335,8 @@ function renderServiceRequests(){
     }else if(review)reviewHtml='<p class="service-review-sent">✓ Avaliação enviada. Obrigado por ajudar outras empresas a escolherem melhor.</p>';
     const contactDigits=String(r.requester_whatsapp||"").replace(/[^0-9]/g,"");
     const contactPhone=contactDigits.startsWith("55")?contactDigits:"55"+contactDigits;
-    const contactLink=providerCanSeeRequest(r)&&contactDigits?'<a class="whatsapp-link" href="https://wa.me/'+esc(contactPhone)+'?text='+encodeURIComponent("Olá! Vi sua solicitação no MFR Market e posso conversar sobre o serviço.")+'" target="_blank" rel="noopener noreferrer">CONTATAR SOLICITANTE PELO WHATSAPP</a>':"";
-    const noContact=providerCanSeeRequest(r)&&!contactDigits?'<small>O solicitante não informou WhatsApp.</small>':"";
+    const contactLink=(providerCanSeeRequest(r)||providerOwnsRequest(r))&&contactDigits?'<a class="whatsapp-link" href="https://wa.me/'+esc(contactPhone)+'?text='+encodeURIComponent("Olá! Vi sua solicitação no MFR Market e posso conversar sobre o serviço.")+'" target="_blank" rel="noopener noreferrer">CONTATAR SOLICITANTE PELO WHATSAPP</a>':"";
+    const noContact=(providerCanSeeRequest(r)||providerOwnsRequest(r))&&!contactDigits?'<small>O solicitante não informou WhatsApp.</small>':"";
     return '<article class="panel service-request-card"><div><b>'+esc(r.title)+'</b><small>'+esc(provider?.business_name||"Solicitação aberta")+' · '+esc(category?.name||"Serviço")+' · '+esc(r.service_city)+'/'+esc(r.service_state)+'</small><span class="service-status">'+statusLabel+'</span><small>Solicitado em '+new Date(r.requested_at).toLocaleDateString("pt-BR")+'</small><p>'+esc(r.description||"")+'</p>'+contactLink+noContact+'</div><div class="service-request-actions">'+actions+'</div>'+reviewHtml+'</article>';
   }).join("");
   $("serviceRequestList").innerHTML=html||'<div class="empty">Você ainda não fez solicitações de serviços.</div>';
