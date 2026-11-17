@@ -192,6 +192,7 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
       <button id="pricesTab" class="tab" data-tab="prices">Cotações</button>
       <button id="supplierProfileTab" class="tab hidden" data-tab="supplierProfile">Meu perfil</button>
       <button id="requestsTab" class="tab hidden" data-tab="requests">Mural de oportunidades</button>
+      <button id="servicesTab" class="tab hidden" data-tab="services">MFR Serviços</button>
       <button id="reportsTab" class="tab" data-tab="reports">Relatórios</button>
       <button id="adminTab" class="tab hidden" data-tab="admin">Administração</button>
     </nav>
@@ -254,6 +255,50 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
           <button type="submit">PUBLICAR SOLICITAÇÃO</button>
         </form>
         <h3 id="requestListTitle">Solicitações disponíveis</h3><div id="requestList"></div>
+      </section>
+      <section id="services" class="view hidden">
+        <h2>MFR Serviços</h2>
+        <p class="muted">Encontre profissionais e empresas para manutenção, instalação e serviços terceirizados. Consulte avaliações feitas por quem já contratou.</p>
+        <div class="service-toolbar panel">
+          <label for="serviceCategoryFilter">Filtrar por categoria</label>
+          <select id="serviceCategoryFilter"><option value="">Todas as categorias</option></select>
+          <label for="serviceSearch">Pesquisar prestador ou serviço</label>
+          <input id="serviceSearch" type="search" placeholder="Ex.: ar-condicionado, carpinteiro, mecânico...">
+          <label for="serviceSort">Ordenar resultados</label>
+          <select id="serviceSort"><option value="rating">Melhor avaliação</option><option value="reviews">Mais avaliações</option><option value="name">Nome</option></select>
+        </div>
+        <div id="serviceProviderFormWrap" class="hidden">
+          <h3>Cadastro de prestador — Administração MFR</h3>
+          <form id="serviceProviderForm" class="panel">
+            <label for="serviceBusinessName">Nome da empresa ou profissional</label><input id="serviceBusinessName" required maxlength="140">
+            <label for="serviceContactName">Pessoa de contato</label><input id="serviceContactName" maxlength="120">
+            <label for="serviceWhatsapp">WhatsApp com DDD (somente números)</label><input id="serviceWhatsapp" required inputmode="numeric" placeholder="47999999999">
+            <label for="serviceEmail">E-mail (opcional)</label><input id="serviceEmail" type="email">
+            <label for="serviceCity">Cidade</label><input id="serviceCity" required>
+            <label for="serviceState">UF</label><input id="serviceState" required maxlength="2" value="SC">
+            <label for="serviceArea">Região de atendimento</label><input id="serviceArea" placeholder="Ex.: Itajaí e região">
+            <label for="serviceDescription">Descrição e especialidades</label><textarea id="serviceDescription" maxlength="1500"></textarea>
+            <label for="serviceProviderCategories">Categorias atendidas (selecione uma ou mais)</label><select id="serviceProviderCategories" multiple size="6" required></select>
+            <label class="service-check"><input id="serviceVerified" type="checkbox"> Prestador verificado pela MFR</label>
+            <button type="submit">CADASTRAR PRESTADOR</button>
+            <p id="serviceProviderMessage" class="notice"></p>
+          </form>
+        </div>
+        <h3>Prestadores disponíveis</h3><div id="serviceProviderList"><div class="empty">Carregando prestadores...</div></div>
+        <h3>Minhas solicitações de serviço</h3><div id="serviceRequestList"></div>
+        <div id="serviceRequestFormWrap" class="hidden">
+          <h3>Solicitar serviço</h3>
+          <form id="serviceRequestForm" class="panel">
+            <input id="serviceRequestProviderId" type="hidden">
+            <label for="serviceRequestTitle">O que precisa ser feito?</label><input id="serviceRequestTitle" required maxlength="160" placeholder="Ex.: Manutenção preventiva de ar-condicionado">
+            <label for="serviceRequestDescription">Detalhes do serviço</label><textarea id="serviceRequestDescription" maxlength="2000"></textarea>
+            <label for="serviceRequestCity">Cidade onde será realizado</label><input id="serviceRequestCity" required>
+            <label for="serviceRequestState">UF</label><input id="serviceRequestState" required maxlength="2" value="SC">
+            <button type="submit">ENVIAR SOLICITAÇÃO</button>
+            <button id="cancelServiceRequest" type="button" class="secondary-button">CANCELAR</button>
+            <p id="serviceRequestMessage" class="notice"></p>
+          </form>
+        </div>
       </section>
       <section id="supplierProfile" class="view hidden">
         <h2>Meu perfil de fornecedor</h2>
