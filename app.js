@@ -84,7 +84,7 @@ document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()
 document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.go)));
 async function loadData(){
   const [pRes,qRes,sRes]=await Promise.all([
-    supabaseClient.from("products").select("id,name,sku,category,created_at").order("name"),
+    supabaseClient.from("products").select("id,name,sku,category,image_urls,created_at").order("name"),
     supabaseClient.from("prices").select("id,product_id,store,price,shipping,url,notes,created_at,created_by,expires_at").order("created_at",{ascending:false}),
     supabaseClient.from("supplier_profiles").select("user_id,whatsapp,categories")
   ]);
@@ -104,6 +104,10 @@ async function loadData(){
   render();
 }
 function total(q){return Number(q.price||0)+Number(q.shipping||0)}
+function productThumb(p){
+  const url=Array.isArray(p?.image_urls)?p.image_urls[0]:"";
+  return url ? '<img class="product-thumb" src="'+esc(url)+'" alt="Foto de '+esc(p?.name||"produto")+'" loading="lazy">' : '<div class="product-thumb product-placeholder">SEM FOTO</div>';
+}
 function render(){
   $("countProducts").textContent=products.length;
   $("countPrices").textContent=prices.length;
@@ -112,7 +116,7 @@ function render(){
   const productTerm=($("productSearch")?.value||"").toLocaleLowerCase("pt-BR");
   const category=$("productCategoryFilter")?.value||"";
   const shownProducts=products.filter(p=>(!category||p.category===category)&&(!productTerm||p.name.toLocaleLowerCase("pt-BR").includes(productTerm)));
-  $("productList").innerHTML=shownProducts.length?shownProducts.map(p=>'<div class="item"><div><b>'+esc(p.name)+'</b><small>'+esc(p.category||"Sem categoria")+(p.sku?" • "+esc(p.sku):"")+'</small></div></div>').join(""):'<div class="empty">Nenhum produto encontrado.</div>';
+  $("productList").innerHTML=shownProducts.length?shownProducts.map(p=>'<div class="item product-item">'+productThumb(p)+'<div class="product-item-info"><b>'+esc(p.name)+'</b><small>'+esc(p.category||"Sem categoria")+(p.sku?" • "+esc(p.sku):"")+'</small><small>'+(Array.isArray(p.image_urls)?p.image_urls.length:0)+' foto(s)</small></div></div>').join(""):'<div class="empty">Nenhum produto encontrado.</div>';
   const term=($("quoteSearch")?.value||"").toLocaleLowerCase("pt-BR");
   const shownQuotes=prices.filter(q=>{const p=products.find(x=>x.id===q.product_id);return !term||((p?.name||"").toLocaleLowerCase("pt-BR").includes(term))||q.store.toLocaleLowerCase("pt-BR").includes(term)}).sort((a,b)=>total(a)-total(b));
   $("priceList").innerHTML=shownQuotes.length?shownQuotes.map(q=>{
@@ -122,10 +126,10 @@ function render(){
     const whatsappDigits=contact.replace(/[^0-9]/g,"");
     const messageText="Olá! Tenho interesse na cotação do produto "+(p?.name||"Produto")+". Vi sua oferta na loja "+q.store+". Preço: "+money(q.price)+". Frete: "+money(q.shipping)+". Total: "+money(total(q))+". Podemos negociar?";
     const whatsappAction=(whatsappDigits?'<a class="whatsapp-link" href="https://wa.me/55'+whatsappDigits+'?text='+encodeURIComponent(messageText)+'" target="_blank" rel="noopener noreferrer">CHAT COM O VENDEDOR • WHATSAPP</a><small class="muted">WhatsApp: +55'+whatsappDigits+'</small>':'<small class="muted">Vendedor ainda não cadastrou o WhatsApp comercial.</small>');
-    return '<div class="item"><div><b>'+esc(p?.name||"Produto")+'</b><small>'+esc(q.store)+' • '+new Date(q.created_at).toLocaleString("pt-BR")+'</small><small>Produto: '+money(q.price)+' • Frete: '+money(q.shipping)+' • Validade: '+expiry+'</small>'+(q.url?'<small><a href="'+esc(q.url)+'" target="_blank" rel="noopener noreferrer">Abrir anúncio</a></small>':"")+(q.notes?'<small>'+esc(q.notes)+'</small>':"")+whatsappAction+(own&&!buyerMode()?'<button data-del-price="'+esc(q.id)+'">Excluir cotação</button>':"")+'</div><div class="price">'+money(total(q))+'<small>total com frete</small></div></div>';
+    return '<div class="item quote-item">'+productThumb(p)+'<div class="quote-item-info"><b>'+esc(p?.name||"Produto")+'</b><small>'+esc(q.store)+' • '+new Date(q.created_at).toLocaleString("pt-BR")+'</small><small>Produto: '+money(q.price)+' • Frete: '+money(q.shipping)+' • Validade: '+expiry+'</small>'+(q.url?'<small><a href="'+esc(q.url)+'" target="_blank" rel="noopener noreferrer">Abrir anúncio</a></small>':"")+(q.notes?'<small>'+esc(q.notes)+'</small>':"")+whatsappAction+(own&&!buyerMode()?'<button data-del-price="'+esc(q.id)+'">Excluir cotação</button>':"")+'</div><div class="price">'+money(total(q))+'<small>total com frete</small></div></div>';
   }).join(""):'<div class="empty">Nenhuma cotação encontrada.</div>';
   const grouped=products.map(p=>({p,qs:prices.filter(q=>q.product_id===p.id)})).filter(x=>x.qs.length);
-  $("bestPrices").innerHTML=grouped.length?grouped.map(x=>{const best=[...x.qs].sort((a,b)=>total(a)-total(b))[0];return '<div class="item"><div><b>'+esc(x.p.name)+'</b><small>Melhor oferta: '+esc(best.store)+'</small></div><div class="price">'+money(total(best))+'</div></div>'}).join(""):'<div class="empty">Ainda não há cotações para comparar.</div>';
+  $("bestPrices").innerHTML=grouped.length?grouped.map(x=>{const best=[...x.qs].sort((a,b)=>total(a)-total(b))[0];return '<div class="item best-price-item">'+productThumb(x.p)+'<div class="best-price-info"><b>'+esc(x.p.name)+'</b><small>Melhor oferta: '+esc(best.store)+'</small></div><div class="price">'+money(total(best))+'</div></div>'}).join(""):'<div class="empty">Ainda não há cotações para comparar.</div>';
   if(isAdmin){const active=accessUsers.filter(u=>u.approved);$("metricUsers").textContent=active.length;$("metricBuyers").textContent=active.filter(u=>u.role==="comprador").length;$("metricSuppliers").textContent=active.filter(u=>u.role==="fornecedor").length;$("metricQuotes").textContent=prices.length}
   renderNotifications();renderReports();
   document.querySelectorAll("[data-del-price]").forEach(b=>b.onclick=async()=>{if(!confirm("Excluir somente esta cotação? Os cadastros de produtos serão mantidos."))return;const {error}=await supabaseClient.from("prices").delete().eq("id",b.dataset.delPrice);if(error)return alert("Erro: "+error.message);await loadData()});
@@ -154,9 +158,33 @@ $("productCategoryFilter").addEventListener("change",render);
 $("quoteSearch").addEventListener("input",render);
 $("productForm").addEventListener("submit",async e=>{
   e.preventDefault();if(!isAdmin)return alert("Somente o administrador cadastra produtos.");
-  const row={name:$("pName").value.trim(),sku:$("pSku").value.trim()||null,category:$("pCategory").value,created_by:currentUser.id};
-  const {error}=await supabaseClient.from("products").insert(row);if(error)return alert("Erro ao cadastrar produto: "+error.message);
-  e.target.reset();await loadData();alert("Produto cadastrado. O cadastro será mantido mesmo quando as cotações vencerem.");
+  const files=[...($("pImages").files||[])];
+  if(files.length>6)return message("productImageMessage","Escolha no máximo 6 fotos.","error");
+  const allowed=["image/jpeg","image/png","image/webp"];
+  for(const file of files){
+    if(!allowed.includes(file.type))return message("productImageMessage","Use somente imagens JPG, PNG ou WEBP.","error");
+    if(file.size>5*1024*1024)return message("productImageMessage","Cada foto deve ter no máximo 5 MB.","error");
+  }
+  const productId=crypto.randomUUID(),paths=[],urls=[];
+  const button=e.target.querySelector('button[type="submit"]');button.disabled=true;button.textContent="SALVANDO PRODUTO...";
+  message("productImageMessage",files.length?"Enviando fotos para o servidor...":"Salvando produto...");
+  try{
+    for(const file of files){
+      const ext=file.type==="image/jpeg"?"jpg":file.type==="image/png"?"png":"webp";
+      const path=productId+"/"+crypto.randomUUID()+"."+ext;
+      const {error:uploadError}=await supabaseClient.storage.from("product-images").upload(path,file,{cacheControl:"31536000",contentType:file.type,upsert:false});
+      if(uploadError)throw uploadError;
+      paths.push(path);
+      const {data}=supabaseClient.storage.from("product-images").getPublicUrl(path);urls.push(data.publicUrl);
+    }
+    const row={id:productId,name:$("pName").value.trim(),sku:$("pSku").value.trim()||null,category:$("pCategory").value,created_by:currentUser.id,image_urls:urls};
+    const {error}=await supabaseClient.from("products").insert(row);if(error)throw error;
+    e.target.reset();message("productImageMessage",urls.length+" foto(s) vinculada(s) ao produto.","success");
+    await loadData();alert("Produto cadastrado com sucesso e fotos salvas no servidor.");
+  }catch(err){
+    if(paths.length)await supabaseClient.storage.from("product-images").remove(paths);
+    message("productImageMessage","Não foi possível salvar o produto: "+(err.message||"Erro desconhecido."),"error");
+  }finally{button.disabled=false;button.textContent="Salvar produto"}
 });
 $("priceForm").addEventListener("submit",async e=>{
   e.preventDefault();if(buyerMode())return alert("Compradores não cadastram cotações.");if(!products.length)return alert("Ainda não existem produtos cadastrados.");const ownProfile=supplierProfiles.find(x=>x.user_id===currentUser?.id);if(!ownProfile?.whatsapp)return alert("Antes de publicar uma cotação, cadastre seu WhatsApp em Meu perfil. Ele aparecerá no anúncio para o comprador entrar em contato.");
