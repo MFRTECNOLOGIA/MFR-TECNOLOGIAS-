@@ -50,8 +50,8 @@ function allowedTabs(){
   $("supplierCategoryBox").classList.toggle("hidden",!(supplier||isAdmin));
   $("servicesTab").classList.toggle("hidden",!(buyer||supplier||provider||isAdmin));
   $("pricesTab").classList.toggle("hidden",provider);
-  $("productsTab").classList.toggle("hidden",!isAdmin);
-  $("homeAddProduct").classList.toggle("hidden",!isAdmin);
+  $("productsTab").classList.toggle("hidden",!(supplier||isAdmin));
+  $("homeAddProduct").classList.toggle("hidden",!(supplier||isAdmin));
   $("homeAddQuote").classList.toggle("hidden",buyer||provider);
   $("pricesTab").textContent=buyer?"Consultar preços":"Cotações";
   $("quoteListTitle").textContent=buyer?"Comparação de cotações (menor total primeiro)":supplier?"Minhas cotações":"Todas as cotações";
@@ -66,7 +66,7 @@ function allowedTabs(){
 }
 function tab(name){
   if(name==="admin"&&!isAdmin)return;
-  if(name==="products"&&!isAdmin)return;
+  if(name==="products"&&currentRole!=="fornecedor"&&!isAdmin)return;
   if(name==="reports"&&["fornecedor","prestador"].includes(currentRole))return;
   if(name==="prices"&&currentRole==="prestador")return;
   if(name==="supplierProfile"&&currentRole!=="fornecedor"&&!isAdmin)return;
@@ -116,7 +116,7 @@ function render(){
   $("countProducts").textContent=products.length;
   $("countPrices").textContent=prices.length;
   $("priceProduct").innerHTML=products.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join("");
-  $("productForm").classList.toggle("hidden",!isAdmin);
+  $("productForm").classList.toggle("hidden",!(currentRole==="fornecedor"||isAdmin));
   const productTerm=($("productSearch")?.value||"").toLocaleLowerCase("pt-BR");
   const category=$("productCategoryFilter")?.value||"";
   const shownProducts=products.filter(p=>(!category||p.category===category)&&(!productTerm||p.name.toLocaleLowerCase("pt-BR").includes(productTerm)));
@@ -161,7 +161,7 @@ $("productSearch").addEventListener("input",render);
 $("productCategoryFilter").addEventListener("change",render);
 $("quoteSearch").addEventListener("input",render);
 $("productForm").addEventListener("submit",async e=>{
-  e.preventDefault();if(!isAdmin)return alert("Somente o administrador cadastra produtos.");
+  e.preventDefault();if(currentRole!=="fornecedor"&&!isAdmin)return alert("Somente fornecedores autorizados e o administrador cadastram produtos.");
   const files=[...($("pImages").files||[])];
   if(files.length>6)return message("productImageMessage","Escolha no máximo 6 fotos.","error");
   const allowed=["image/jpeg","image/png","image/webp"];
@@ -175,7 +175,7 @@ $("productForm").addEventListener("submit",async e=>{
   try{
     for(const file of files){
       const ext=file.type==="image/jpeg"?"jpg":file.type==="image/png"?"png":"webp";
-      const path=productId+"/"+crypto.randomUUID()+"."+ext;
+      const path=currentUser.id+"/"+productId+"/"+crypto.randomUUID()+"."+ext;
       const {error:uploadError}=await supabaseClient.storage.from("product-images").upload(path,file,{cacheControl:"31536000",contentType:file.type,upsert:false});
       if(uploadError)throw uploadError;
       paths.push(path);
@@ -360,7 +360,7 @@ function renderServiceRequests(){
     if(isAdmin){
       if(r.status==="pending")actions+='<button data-service-status="in_progress" data-service-id="'+esc(r.id)+'">MARCAR EM ANDAMENTO</button>';
       if(r.status==="in_progress")actions+='<button data-service-status="completed" data-service-id="'+esc(r.id)+'">CONFIRMAR CONCLUSÃO</button><button class="secondary-button" data-service-status="cancelled" data-service-id="'+esc(r.id)+'">CANCELAR</button>';
-    }else if(currentRole==="fornecedor"&&providerCanSeeRequest(r)){
+    }else if(["fornecedor","prestador"].includes(currentRole)&&providerCanSeeRequest(r)){
       actions+='<button data-service-status="in_progress" data-service-id="'+esc(r.id)+'">ACEITAR OPORTUNIDADE</button>';
     }else if(r.requester_id===currentUser?.id&&r.status==="in_progress"){
       actions+='<button data-service-status="completed" data-service-id="'+esc(r.id)+'">CONFIRMAR CONCLUSÃO</button><button class="secondary-button" data-service-status="cancelled" data-service-id="'+esc(r.id)+'">CANCELAR SOLICITAÇÃO</button>';
