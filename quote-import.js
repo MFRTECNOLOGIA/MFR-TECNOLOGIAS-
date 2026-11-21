@@ -13,6 +13,17 @@
     $("quoteImportPreview").innerHTML=parsedRows.length?'<div class="panel"><h3>Conferência antes de importar ('+parsedRows.length+' linhas)</h3><p class="muted">Confira o vínculo de cada linha com um produto já cadastrado no catálogo. Linhas sem produto correspondente precisam ser selecionadas manualmente.</p><div class="quote-import-table-wrap"><table class="quote-import-table"><thead><tr><th>Incluir</th><th>Produto na planilha</th><th>Produto MFR</th><th>Qtd.</th><th>Preço unit.</th><th>Frete</th></tr></thead><tbody>'+parsedRows.map((r,i)=>'<tr><td><input type="checkbox" data-qi-include="'+i+'" checked></td><td>'+r.product.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))+'</td><td><select data-qi-product="'+i+'">'+productOptions(r.productId)+'</select></td><td>'+String(r.quantity||"—")+'</td><td>'+money(r.price)+'</td><td>'+money(r.shipping)+'</td></tr>').join("")+'</tbody></table></div></div>':'';
     $("quoteImportSave").classList.toggle("hidden",!parsedRows.length);
   }
+
+  // Baixa um modelo CSV com os cabeçalhos aceitos pelo importador.
+  $("quoteImportDownloadTemplate")?.addEventListener("click",()=>{
+    const csv="Produto;Preço unitário;Frete;Quantidade;Observações\\r\\n";
+    const blob=new Blob(["\\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;a.download="Modelo_Cotacoes_MFR_Market.csv";
+    document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  });
+
   $("quoteImportRead").addEventListener("click",async()=>{
     if(!["fornecedor","admin"].includes(currentRole))return setMsg("Somente fornecedores autorizados podem importar cotações.","error");
     const f=$("quoteImportFile").files?.[0];if(!f)return setMsg("Selecione uma planilha primeiro.","error");
