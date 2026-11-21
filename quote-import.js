@@ -6,14 +6,14 @@
   const headerKey=s=>norm(s).replace(/[^a-z0-9]/g,"");
   const pick=(obj,keys)=>{const wanted=keys.map(headerKey);const k=Object.keys(obj).find(x=>wanted.includes(headerKey(x)));return k?obj[k]:""};
   const setMsg=(t,kind="")=>{const el=$("quoteImportMessage");if(el){el.textContent=t;el.className="notice "+kind}};
-  const aliases={product:["produto","item","descricao","descrição","nome do produto","produto/item"],price:["preco","preço","valor","preco unitario","preço unitário","valor unitario","valor unitário"],shipping:["frete","entrega","valor frete"],quantity:["quantidade","qtd","qtde"],notes:["observacao","observação","observacoes","observações","detalhes"]};
+  const aliases={product:["produto","item","descricao","descrição","nome do produto","produto/item"],price:["preco","preço","valor","preco unitario","preço unitário","valor unitario","valor unitário"],shipping:["frete","entrega","valor frete"],minimum:["pedido minimo","pedido mínimo","minimo de compra","quantidade minima","quantidade mínima","qtd minima"],brand:["marca","fabricante","brand"]};
   const toNum=v=>{if(typeof v==="number")return v;let s=String(v??"").replace(/R\\$/gi,"").replace(/\\s/g,"");if(s.includes(","))s=s.replace(/\\./g,"").replace(",",".");const n=Number(s);return Number.isFinite(n)?n:NaN};
   const money=n=>Number(n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
   function productOptions(selected){return '<option value="">Selecione o produto do catálogo</option>'+products.map(p=>'<option value="'+p.id+'" '+(p.id===selected?"selected":"")+'>'+String(p.name).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))+'</option>').join("")}
   const categories=["CARNE","PAPELARIA","INSUMOS","HIGIENE E LIMPEZA","EMBALAGENS"];
   const categoryOptions=()=>'<option value="">Escolha a categoria</option>'+categories.map(c=>'<option value="'+c+'">'+c+'</option>').join("");
   function renderPreview(){
-    $("quoteImportPreview").innerHTML=parsedRows.length?'<div class="panel"><h3>Conferência antes de importar ('+parsedRows.length+' linhas)</h3><p class="muted">Produtos já cadastrados serão vinculados automaticamente. Para itens novos, escolha “Cadastrar novo produto” e informe a categoria. Se o mesmo item aparecer mais de uma vez, ele será cadastrado apenas uma vez e todas as cotações usarão o mesmo cadastro.</p><div class="quote-import-table-wrap"><table class="quote-import-table"><thead><tr><th>Incluir</th><th>Produto na planilha</th><th>Cadastro no MFR</th><th>Categoria (novos)</th><th>Qtd.</th><th>Preço unit.</th><th>Frete</th></tr></thead><tbody>'+parsedRows.map((r,i)=>'<tr><td><input type="checkbox" data-qi-include="'+i+'" checked></td><td>'+r.product.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))+'</td><td><select data-qi-product="'+i+'">'+productOptions(r.productId)+'<option value="__new__" '+(!r.productId?'selected':'')+'>Cadastrar novo produto</option></select></td><td><select data-qi-category="'+i+'" '+(r.productId?'disabled':'')+'>'+categoryOptions()+'</select></td><td>'+String(r.quantity||"—")+'</td><td>'+money(r.price)+'</td><td>'+money(r.shipping)+'</td></tr>').join("")+'</tbody></table></div></div>':'';
+    $("quoteImportPreview").innerHTML=parsedRows.length?'<div class="panel"><h3>Conferência antes de importar ('+parsedRows.length+' linhas)</h3><p class="muted">Produtos já cadastrados serão vinculados automaticamente. Para itens novos, escolha “Cadastrar novo produto” e informe a categoria. Se o mesmo item aparecer mais de uma vez, ele será cadastrado apenas uma vez e todas as cotações usarão o mesmo cadastro.</p><div class="quote-import-table-wrap"><table class="quote-import-table"><thead><tr><th>Incluir</th><th>Produto na planilha</th><th>Cadastro no MFR</th><th>Categoria (novos)</th><th>Pedido mínimo</th><th>Marca</th><th>Preço unit.</th><th>Frete</th></tr></thead><tbody>'+parsedRows.map((r,i)=>'<tr><td><input type="checkbox" data-qi-include="'+i+'" checked></td><td>'+r.product.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))+'</td><td><select data-qi-product="'+i+'">'+productOptions(r.productId)+'<option value="__new__" '+(!r.productId?'selected':'')+'>Cadastrar novo produto</option></select></td><td><select data-qi-category="'+i+'" '+(r.productId?'disabled':'')+'>'+categoryOptions()+'</select></td><td>'+String(r.minimum||"—")+'</td><td>'+String(r.brand||"—").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))+'</td><td>'+money(r.price)+'</td><td>'+money(r.shipping)+'</td></tr>').join("")+'</tbody></table></div></div>':'';
     $("quoteImportSave").classList.toggle("hidden",!parsedRows.length);
     $("quoteImportPreview").querySelectorAll("[data-qi-product]").forEach(sel=>sel.addEventListener("change",()=>{const i=sel.dataset.qiProduct;const cat=$("quoteImportPreview").querySelector('[data-qi-category="'+i+'"]');cat.disabled=sel.value!=="__new__";}));
   }
@@ -27,7 +27,7 @@
       const wb=new ExcelJS.Workbook();
       wb.creator="MFR Market";wb.subject="Modelo oficial para importação de cotações";wb.title="Modelo de Cotações MFR Market";
       const ws=wb.addWorksheet("Cotações",{views:[{state:"frozen",ySplit:6,showGridLines:false}]});
-      ws.columns=[{key:"product",width:38},{key:"price",width:20},{key:"shipping",width:16},{key:"quantity",width:19},{key:"notes",width:42}];
+      ws.columns=[{key:"product",width:38},{key:"price",width:20},{key:"shipping",width:16},{key:"minimum",width:22},{key:"brand",width:24}];
       ws.mergeCells("A1:E1");ws.getCell("A1").value="MFR MARKET  |  MODELO OFICIAL DE COTAÇÕES";
       ws.getCell("A1").font={name:"Aptos Display",size:17,bold:true,color:{argb:"FFFFFFFF"}};
       ws.getCell("A1").fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF17171C"}};
@@ -40,7 +40,7 @@
       ws.getCell("A4").font={bold:true,color:{argb:"FFFFFFFF"},size:10};
       ws.getCell("A4").fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFB50924"}};
       ws.getCell("A4").alignment={vertical:"middle"};ws.getRow(4).height=23;
-      const headers=["Produto *","Preço unitário (R$) *","Frete (R$)","Quantidade","Observações"];
+      const headers=["Produto *","Preço unitário (R$) *","Frete (R$)","Pedido mínimo","Marca"];
       ws.addRow([]);const hr=ws.getRow(6);
       headers.forEach((v,i)=>{const c=hr.getCell(i+1);c.value=v;c.font={bold:true,color:{argb:"FFFFFFFF"},size:10};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFB50924"}};c.alignment={horizontal:"center",vertical:"middle",wrapText:true};c.border={bottom:{style:"medium",color:{argb:"FF17171C"}}};});
       hr.height=32;
@@ -48,13 +48,13 @@
       ws.autoFilter="A6:E36";
       ws.dataValidations.add("B7:B36",{type:"decimal",operator:"greaterThan",formulae:[0],allowBlank:true,showErrorMessage:true,errorTitle:"Preço inválido",error:"Informe um preço maior que zero."});
       ws.dataValidations.add("C7:C36",{type:"decimal",operator:"greaterThanOrEqual",formulae:[0],allowBlank:true,showErrorMessage:true,errorTitle:"Frete inválido",error:"O frete deve ser zero ou maior."});
-      ["Use o nome do produto conforme aparece no catálogo do MFR Market.","Obrigatório. Informe somente o valor numérico, por exemplo 125,90.","Opcional. Se não houver frete, informe 0 ou deixe em branco.","Opcional. Exemplo: 20 caixas ou 150 kg.","Opcional. Informe marca, prazo e condições comerciais."].forEach((v,i)=>ws.getCell(6,i+1).note=v);
+      ["Use o nome do produto conforme aparece no catálogo do MFR Market.","Obrigatório. Informe somente o valor numérico, por exemplo 125,90.","Opcional. Se não houver frete, informe 0 ou deixe em branco.","Informe a menor quantidade ou valor que o fornecedor aceita vender. Ex.: 10 unidades, 5 caixas ou R$ 500.","Informe a marca comercial do produto."].forEach((v,i)=>ws.getCell(6,i+1).note=v);
       ws.mergeCells("A38:E38");ws.getCell("A38").value="IMPORTANTE: não altere os títulos da linha 6. Confira os nomes dos produtos no catálogo antes de importar.";
       ws.getCell("A38").font={bold:true,size:9,color:{argb:"FFB50924"}};ws.getCell("A38").fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFCE8EC"}};ws.getCell("A38").alignment={wrapText:true,vertical:"middle"};ws.getRow(38).height=30;
       const guide=wb.addWorksheet("Leia-me",{views:[{showGridLines:false}]});guide.columns=[{width:5},{width:28},{width:88}];
       guide.mergeCells("B2:C2");guide.getCell("B2").value="COMO PREENCHER E IMPORTAR";guide.getCell("B2").font={size:17,bold:true,color:{argb:"FFFFFFFF"}};guide.getCell("B2").fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF17171C"}};guide.getRow(2).height=38;
       guide.mergeCells("B3:C3");guide.getCell("B3").value="MFR MARKET  •  GUIA RÁPIDO DO FORNECEDOR";guide.getCell("B3").font={bold:true,color:{argb:"FFB50924"},size:10};
-      const items=[["01  Produto","Digite o nome conforme aparece no catálogo. Se houver diferença, associe o item manualmente na conferência."],["02  Preço unitário","Obrigatório. Informe apenas o número, por exemplo 125,90. Não digite R$. Deve ser maior que zero."],["03  Frete","Opcional. Informe o valor em reais. Se não houver cobrança, deixe em branco ou informe 0."],["04  Quantidade","Opcional. Inclua a unidade quando necessário: 20 caixas, 150 kg ou 5 unidades."],["05  Observações","Opcional. Informe marca, prazo de entrega, validade comercial ou condições de pagamento."]];
+      const items=[["01  Produto","Digite o nome conforme aparece no catálogo. Se houver diferença, associe o item manualmente na conferência."],["02  Preço unitário","Obrigatório. Informe apenas o número, por exemplo 125,90. Não digite R$. Deve ser maior que zero."],["03  Frete","Opcional. Informe o valor em reais. Se não houver cobrança, deixe em branco ou informe 0."],["04  Pedido mínimo","Informe a menor quantidade ou valor aceito para realizar a venda. Ex.: 10 unidades, 5 caixas ou R$ 500."],["05  Marca","Informe a marca comercial do produto."]];
       items.forEach((it,i)=>{const r=5+i;guide.getCell(r,2).value=it[0];guide.getCell(r,2).font={bold:true,color:{argb:"FFFFFFFF"}};guide.getCell(r,2).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFB50924"}};guide.getCell(r,3).value=it[1];guide.getCell(r,3).font={size:10,color:{argb:"FF17171C"}};guide.getCell(r,3).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFF4F5F7"}};guide.getCell(r,2).alignment=guide.getCell(r,3).alignment={vertical:"middle",wrapText:true};guide.getRow(r).height=46;});
       guide.mergeCells("B12:C12");guide.getCell("B12").value="PASSO A PASSO";guide.getCell("B12").font={bold:true,color:{argb:"FFFFFFFF"}};guide.getCell("B12").fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF17171C"}};
       ["1. Preencha uma linha para cada produto na aba Cotações.","2. Não altere os títulos da linha 6.","3. Salve o arquivo no formato Excel (.xlsx).","4. No MFR Market, acesse Importar planilha e selecione o arquivo.","5. Informe o nome da loja, confira os produtos e converta as linhas selecionadas."].forEach((v,i)=>{const r=13+i;guide.mergeCells(r,2,r,3);guide.getCell(r,2).value=v;guide.getCell(r,2).font={size:10,color:{argb:"FF17171C"}};guide.getCell(r,2).fill={type:"pattern",pattern:"solid",fgColor:{argb:i%2?"FFF4F5F7":"FFFFFFFF"}};guide.getCell(r,2).alignment={vertical:"middle"};guide.getRow(r).height=27;});
@@ -84,9 +84,9 @@
       const rows=XLSX.utils.sheet_to_json(sheet,{range:headerIndex,defval:"",raw:false});
       if(!rows.length)throw new Error("A aba foi encontrada, mas não há linhas de produtos abaixo do cabeçalho.");
       parsedRows=rows.map(row=>{
-        const product=String(pick(row,aliases.product)||"").trim(),price=toNum(pick(row,aliases.price)),shipping=toNum(pick(row,aliases.shipping)||0),quantity=String(pick(row,aliases.quantity)||"").trim(),notes=String(pick(row,aliases.notes)||"").trim();
+        const product=String(pick(row,aliases.product)||"").trim(),price=toNum(pick(row,aliases.price)),shipping=toNum(pick(row,aliases.shipping)||0),minimum=String(pick(row,aliases.minimum)||"").trim(),brand=String(pick(row,aliases.brand)||"").trim();
         const match=products.find(p=>norm(p.name)===norm(product));
-        return {product,price,shipping:Number.isFinite(shipping)?shipping:0,quantity,notes,productId:match?.id||"",valid:!!product&&Number.isFinite(price)&&price>0};
+        return {product,price,shipping:Number.isFinite(shipping)?shipping:0,minimum,brand,productId:match?.id||"",valid:!!product&&Number.isFinite(price)&&price>0};
       }).filter(r=>r.product);
       if(!parsedRows.length)throw new Error("Não encontrei linhas com a coluna Produto. Verifique o cabeçalho da planilha.");
       renderPreview();
@@ -118,7 +118,7 @@
         created.set(key,newProduct.id);known.set(key,newProduct);
       }
       const days=7,expires=new Date(Date.now()+days*86400000).toISOString();
-      const payload=selected.map(r=>({product_id:r.productChoice==="__new__"?created.get(norm(r.product)):r.productChoice,store,price:r.price,shipping:r.shipping,url:null,notes:[r.quantity?"Quantidade na planilha: "+r.quantity:"",r.notes].filter(Boolean).join(" | ")||"Importado de planilha",created_by:currentUser.id,expires_at:expires}));
+      const payload=selected.map(r=>({product_id:r.productChoice==="__new__"?created.get(norm(r.product)):r.productChoice,store,price:r.price,shipping:r.shipping,url:null,notes:[r.minimum?"Pedido mínimo: "+r.minimum:"",r.brand?"Marca: "+r.brand:""].filter(Boolean).join(" | ")||"Importado de planilha",created_by:currentUser.id,expires_at:expires}));
       const {error}=await supabaseClient.from("prices").insert(payload);if(error)throw error;
       setMsg((created.size?created.size+" produto(s) novo(s) cadastrado(s) uma única vez. ":"")+payload.length+" cotação(ões) criada(s) com validade de 7 dias.","success");
       parsedRows=[];renderPreview();$("quoteImportFile").value="";$("quoteImportStore").value="";await loadData();
