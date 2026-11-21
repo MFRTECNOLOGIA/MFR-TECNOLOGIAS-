@@ -190,6 +190,7 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
       <button class="tab active" data-tab="home">Início</button>
       <button id="productsTab" class="tab" data-tab="products">Produtos</button>
       <button id="pricesTab" class="tab" data-tab="prices">Cotações</button>
+      <button id="quoteImportTab" class="tab hidden" data-tab="quoteImport">Importar planilha</button>
       <button id="supplierProfileTab" class="tab hidden" data-tab="supplierProfile">Meu perfil</button>
       <button id="requestsTab" class="tab hidden" data-tab="requests">Mural de oportunidades</button>
       <button id="servicesTab" class="tab hidden" data-tab="services">MFR Serviços</button>
@@ -240,6 +241,19 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
         <h3 id="quoteListTitle">Cotações disponíveis</h3>
         <label for="quoteSearch">Pesquisar cotação por produto ou fornecedor</label><input id="quoteSearch" type="search" placeholder="Digite para pesquisar...">
         <button id="exportCsv" type="button">Exportar minhas cotações CSV</button><div id="priceList"></div>
+      </section>
+      <section id="quoteImport" class="view hidden">
+        <h2>Importar planilha para cotação</h2>
+        <p class="muted">Envie uma planilha XLSX, XLS ou CSV. O MFR Market identifica as colunas, permite conferir os produtos e transforma as linhas em cotações do fornecedor.</p>
+        <div class="panel">
+          <label for="quoteImportFile">Selecionar planilha</label><input id="quoteImportFile" type="file" accept=".xlsx,.xls,.csv" />
+          <label for="quoteImportStore">Nome do fornecedor / loja</label><input id="quoteImportStore" maxlength="120" placeholder="Nome da sua empresa" />
+          <small class="muted">Colunas reconhecidas: produto, preço unitário, frete (opcional), quantidade (opcional) e observações (opcional). A planilha original é processada no navegador; somente as cotações confirmadas serão gravadas.</small>
+          <button id="quoteImportRead" type="button" class="primary">LER E CONFERIR PLANILHA</button>
+          <p id="quoteImportMessage" class="notice" aria-live="polite"></p>
+        </div>
+        <div id="quoteImportPreview"></div>
+        <button id="quoteImportSave" type="button" class="primary hidden">CONVERTER LINHAS SELECIONADAS EM COTAÇÕES</button>
       </section>
       <section id="requests" class="view hidden">
         <h2>Mural de oportunidades</h2>
@@ -345,6 +359,8 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="app.js?v=20261117-fotos-produtos-2"></script>
+  <script src="quote-import.js?v=20261121-1"></script>
 </body>
 </html>
