@@ -138,3 +138,6 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
 .product-gallery a{display:block;flex:0 0 68px;width:68px;height:68px}
 .product-gallery img{display:block;width:68px;height:68px;object-fit:cover;border:1px solid #41414b;border-radius:9px;background:#101014}
 @media(max-width:620px){.product-gallery a,.product-gallery img{flex-basis:54px;width:54px;height:54px}}
+
+/* Importação de planilhas para cotação */
+.quote-import-table-wrap{overflow-x:auto;width:100%}.quote-import-table{width:100%;border-collapse:collapse;min-width:720px;font-size:12px}.quote-import-table th,.quote-import-table td{padding:10px 8px;border-bottom:1px solid #38323a;text-align:left;vertical-align:middle}.quote-import-table th{color:#ff9bad;background:#21151a}.quote-import-table select{min-width:190px;margin:0;padding:8px}.quote-import-table input[type=checkbox]{width:18px;min-height:18px;margin:0;accent-color:#e32246}
