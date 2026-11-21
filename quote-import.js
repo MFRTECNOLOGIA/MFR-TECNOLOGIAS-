@@ -87,9 +87,10 @@ guide.getCell("B21").font={italic:true,size:9,color:{argb:"FFB50924"}};guide.get
       const rows=XLSX.utils.sheet_to_json(sheet,{range:headerIndex,defval:"",raw:false});
       if(!rows.length)throw new Error("A aba foi encontrada, mas não há linhas de produtos abaixo do cabeçalho.");
       parsedRows=rows.map(row=>{
-        const product=String(pick(row,aliases.product)||"").trim(),category=String(pick(row,aliases.category)||"").trim().toUpperCase(),price=toNum(pick(row,aliases.price)),shipping=toNum(pick(row,aliases.shipping)||0),minimum=String(pick(row,aliases.minimum)||"").trim(),brand=String(pick(row,aliases.brand)||"").trim(),validityRaw=String(pick(row,aliases.validity)||"").trim(),validityDays=validityRaw?Number(validityRaw):7;
+        const product=String(pick(row,aliases.product)||"").trim(),sheetCategory=String(pick(row,aliases.category)||"").trim().toUpperCase(),price=toNum(pick(row,aliases.price)),shipping=toNum(pick(row,aliases.shipping)||0),minimum=String(pick(row,aliases.minimum)||"").trim(),brand=String(pick(row,aliases.brand)||"").trim(),validityRaw=String(pick(row,aliases.validity)||"").trim(),validityDays=validityRaw?Number(validityRaw):7;
         const match=products.find(p=>norm(p.name)===norm(product));
-        return {product,category,price,shipping:Number.isFinite(shipping)?shipping:0,minimum,brand,validityDays,productId:match?.id||"",valid:!!product&&Number.isFinite(price)&&price>0&&Number.isInteger(validityDays)&&validityDays>=1&&validityDays<=90};
+        const category=sheetCategory||String(match?.category||"").toUpperCase();
+        return {product,category,price,shipping:Number.isFinite(shipping)?shipping:0,minimum,brand,validityDays,productId:match?.id||"",valid:!!product&&categories.includes(category)&&Number.isFinite(price)&&price>0&&Number.isInteger(validityDays)&&validityDays>=1&&validityDays<=90};
       }).filter(r=>r.product);
       if(!parsedRows.length)throw new Error("Não encontrei linhas com a coluna Produto. Verifique o cabeçalho da planilha.");
       renderPreview();
