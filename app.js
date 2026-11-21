@@ -122,7 +122,8 @@ function render(){
   const shownProducts=products.filter(p=>(!category||p.category===category)&&(!productTerm||p.name.toLocaleLowerCase("pt-BR").includes(productTerm)));
   $("productList").innerHTML=shownProducts.length?shownProducts.map(p=>'<div class="item product-item">'+productGallery(p)+'<div class="product-item-info"><b>'+esc(p.name)+'</b><small>'+esc(p.category||"Sem categoria")+(p.sku?" • "+esc(p.sku):"")+'</small><small>'+(Array.isArray(p.image_urls)?p.image_urls.length:0)+' foto(s)</small></div></div>').join(""):'<div class="empty">Nenhum produto encontrado.</div>';
   const term=($("quoteSearch")?.value||"").toLocaleLowerCase("pt-BR");
-  const shownQuotes=prices.filter(q=>{const p=products.find(x=>x.id===q.product_id);return !term||((p?.name||"").toLocaleLowerCase("pt-BR").includes(term))||q.store.toLocaleLowerCase("pt-BR").includes(term)}).sort((a,b)=>total(a)-total(b));
+  const quoteCategory=$("quoteCategoryFilter")?.value||"";
+  const shownQuotes=prices.filter(q=>{const p=products.find(x=>x.id===q.product_id);const matchesCategory=!quoteCategory||p?.category===quoteCategory;const matchesTerm=!term||((p?.name||"").toLocaleLowerCase("pt-BR").includes(term))||q.store.toLocaleLowerCase("pt-BR").includes(term);return matchesCategory&&matchesTerm}).sort((a,b)=>total(a)-total(b));
   $("priceList").innerHTML=shownQuotes.length?shownQuotes.map(q=>{
     const p=products.find(x=>x.id===q.product_id),expiry=q.expires_at?new Date(q.expires_at).toLocaleDateString("pt-BR"):"—";
     const own=isAdmin||q.created_by===currentUser?.id;
@@ -160,6 +161,7 @@ function renderReports(){
 $("productSearch").addEventListener("input",render);
 $("productCategoryFilter").addEventListener("change",render);
 $("quoteSearch").addEventListener("input",render);
+$("quoteCategoryFilter")?.addEventListener("change",render);
 $("productForm").addEventListener("submit",async e=>{
   e.preventDefault();if(currentRole!=="fornecedor"&&!isAdmin)return alert("Somente fornecedores autorizados e o administrador cadastram produtos.");
   const files=[...($("pImages").files||[])];
