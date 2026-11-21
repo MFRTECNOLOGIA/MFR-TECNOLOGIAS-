@@ -9,9 +9,12 @@
   const toNum=v=>{if(typeof v==="number")return v;let s=String(v??"").replace(/R\\$/gi,"").replace(/\\s/g,"");if(s.includes(","))s=s.replace(/\\./g,"").replace(",",".");const n=Number(s);return Number.isFinite(n)?n:NaN};
   const money=n=>Number(n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
   function productOptions(selected){return '<option value="">Selecione o produto do catálogo</option>'+products.map(p=>'<option value="'+p.id+'" '+(p.id===selected?"selected":"")+'>'+String(p.name).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))+'</option>').join("")}
+  const categories=["CARNE","PAPELARIA","INSUMOS","HIGIENE E LIMPEZA","EMBALAGENS"];
+  const categoryOptions=()=>'<option value="">Escolha a categoria</option>'+categories.map(c=>'<option value="'+c+'">'+c+'</option>').join("");
   function renderPreview(){
-    $("quoteImportPreview").innerHTML=parsedRows.length?'<div class="panel"><h3>Conferência antes de importar ('+parsedRows.length+' linhas)</h3><p class="muted">Confira o vínculo de cada linha com um produto já cadastrado no catálogo. Linhas sem produto correspondente precisam ser selecionadas manualmente.</p><div class="quote-import-table-wrap"><table class="quote-import-table"><thead><tr><th>Incluir</th><th>Produto na planilha</th><th>Produto MFR</th><th>Qtd.</th><th>Preço unit.</th><th>Frete</th></tr></thead><tbody>'+parsedRows.map((r,i)=>'<tr><td><input type="checkbox" data-qi-include="'+i+'" checked></td><td>'+r.product.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))+'</td><td><select data-qi-product="'+i+'">'+productOptions(r.productId)+'</select></td><td>'+String(r.quantity||"—")+'</td><td>'+money(r.price)+'</td><td>'+money(r.shipping)+'</td></tr>').join("")+'</tbody></table></div></div>':'';
+    $("quoteImportPreview").innerHTML=parsedRows.length?'<div class="panel"><h3>Conferência antes de importar ('+parsedRows.length+' linhas)</h3><p class="muted">Produtos já cadastrados serão vinculados automaticamente. Para itens novos, escolha “Cadastrar novo produto” e informe a categoria. Se o mesmo item aparecer mais de uma vez, ele será cadastrado apenas uma vez e todas as cotações usarão o mesmo cadastro.</p><div class="quote-import-table-wrap"><table class="quote-import-table"><thead><tr><th>Incluir</th><th>Produto na planilha</th><th>Cadastro no MFR</th><th>Categoria (novos)</th><th>Qtd.</th><th>Preço unit.</th><th>Frete</th></tr></thead><tbody>'+parsedRows.map((r,i)=>'<tr><td><input type="checkbox" data-qi-include="'+i+'" checked></td><td>'+r.product.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))+'</td><td><select data-qi-product="'+i+'">'+productOptions(r.productId)+'<option value="__new__" '+(!r.productId?'selected':'')+'>Cadastrar novo produto</option></select></td><td><select data-qi-category="'+i+'" '+(r.productId?'disabled':'')+'>'+categoryOptions()+'</select></td><td>'+String(r.quantity||"—")+'</td><td>'+money(r.price)+'</td><td>'+money(r.shipping)+'</td></tr>').join("")+'</tbody></table></div></div>':'';
     $("quoteImportSave").classList.toggle("hidden",!parsedRows.length);
+    $("quoteImportPreview").querySelectorAll("[data-qi-product]").forEach(sel=>sel.addEventListener("change",()=>{const i=sel.dataset.qiProduct;const cat=$("quoteImportPreview").querySelector('[data-qi-category="'+i+'"]');cat.disabled=sel.value!=="__new__";}));
   }
 
   // Gera e baixa um modelo Excel profissional diretamente na plataforma.
@@ -85,13 +88,31 @@
     if(!["fornecedor","admin"].includes(currentRole))return setMsg("Acesso não autorizado.","error");
     const store=$("quoteImportStore").value.trim();if(!store)return setMsg("Informe o nome do fornecedor / loja.","error");
     if(currentRole==="fornecedor"){const profile=supplierProfiles.find(x=>x.user_id===currentUser?.id);if(!profile?.whatsapp)return setMsg("Cadastre seu WhatsApp em Meu perfil antes de publicar cotações.","error")}
-    const selected=parsedRows.map((r,i)=>({...r,productId:$("quoteImportPreview").querySelector('[data-qi-product="'+i+'"]')?.value,include:$("quoteImportPreview").querySelector('[data-qi-include="'+i+'"]')?.checked})).filter(r=>r.include);
+    const selected=parsedRows.map((r,i)=>({...r,productChoice:$("quoteImportPreview").querySelector('[data-qi-product="'+i+'"]')?.value,category:$("quoteImportPreview").querySelector('[data-qi-category="'+i+'"]')?.value,include:$("quoteImportPreview").querySelector('[data-qi-include="'+i+'"]')?.checked})).filter(r=>r.include);
     if(!selected.length)return setMsg("Marque ao menos uma linha para converter.","error");
-    const bad=selected.find(r=>!r.valid||!r.productId);if(bad)return setMsg("Corrija os preços e selecione um produto do catálogo para todas as linhas marcadas.","error");
-    const days=7,expires=new Date(Date.now()+days*86400000).toISOString();
-    const payload=selected.map(r=>({product_id:r.productId,store,price:r.price,shipping:r.shipping,url:null,notes:[r.quantity?"Quantidade na planilha: "+r.quantity:"",r.notes].filter(Boolean).join(" | ")||"Importado de planilha",created_by:currentUser.id,expires_at:expires}));
-    const btn=$("quoteImportSave");btn.disabled=true;btn.textContent="CONVERTENDO...";
-    try{const {error}=await supabaseClient.from("prices").insert(payload);if(error)throw error;setMsg(payload.length+" cotação(ões) criada(s) com validade de 7 dias. A planilha foi convertida com sucesso.","success");parsedRows=[];renderPreview();$("quoteImportFile").value="";$("quoteImportStore").value="";await loadData();}catch(err){setMsg("Falha ao salvar as cotações: "+err.message,"error")}finally{btn.disabled=false;btn.textContent="CONVERTER LINHAS SELECIONADAS EM COTAÇÕES"}
+    const bad=selected.find(r=>!r.valid||(!r.productChoice)||(r.productChoice==="__new__"&&!r.category));if(bad)return setMsg("Corrija os preços, selecione produtos existentes ou informe a categoria dos novos produtos.","error");
+    const btn=$("quoteImportSave");btn.disabled=true;btn.textContent="CADASTRANDO PRODUTOS E COTAÇÕES...";
+    try{
+      // Recarrega o catálogo antes de criar: evita duplicar itens já cadastrados anteriormente.
+      const {data:catalog,error:catalogError}=await supabaseClient.from("products").select("id,name,sku,category,image_urls");
+      if(catalogError)throw catalogError;
+      const known=new Map((catalog||[]).map(p=>[norm(p.name),p]));
+      const created=new Map();
+      for(const r of selected){
+        if(r.productChoice!=="__new__")continue;
+        const key=norm(r.product);
+        if(known.has(key)){created.set(key,known.get(key).id);continue;}
+        if(created.has(key))continue;
+        const {data:newProduct,error:createError}=await supabaseClient.from("products").insert({id:crypto.randomUUID(),name:r.product.trim(),sku:null,category:r.category,created_by:currentUser.id,image_urls:[]}).select("id,name,category").single();
+        if(createError)throw createError;
+        created.set(key,newProduct.id);known.set(key,newProduct);
+      }
+      const days=7,expires=new Date(Date.now()+days*86400000).toISOString();
+      const payload=selected.map(r=>({product_id:r.productChoice==="__new__"?created.get(norm(r.product)):r.productChoice,store,price:r.price,shipping:r.shipping,url:null,notes:[r.quantity?"Quantidade na planilha: "+r.quantity:"",r.notes].filter(Boolean).join(" | ")||"Importado de planilha",created_by:currentUser.id,expires_at:expires}));
+      const {error}=await supabaseClient.from("prices").insert(payload);if(error)throw error;
+      setMsg((created.size?created.size+" produto(s) novo(s) cadastrado(s) uma única vez. ":"")+payload.length+" cotação(ões) criada(s) com validade de 7 dias.","success");
+      parsedRows=[];renderPreview();$("quoteImportFile").value="";$("quoteImportStore").value="";await loadData();
+    }catch(err){setMsg("Falha ao cadastrar produtos ou salvar cotações: "+err.message+". Se algum produto já tiver sido cadastrado, ele será reconhecido na próxima tentativa.","error")}finally{btn.disabled=false;btn.textContent="CONVERTER LINHAS SELECIONADAS EM COTAÇÕES"}
   });
   const oldAllowed=allowedTabs;
   allowedTabs=function(){oldAllowed();$("quoteImportTab")?.classList.toggle("hidden",!["fornecedor","admin"].includes(currentRole));};
