@@ -3,7 +3,8 @@
   const $=id=>document.getElementById(id);
   let parsedRows=[];
   const norm=s=>String(s??"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().trim();
-  const pick=(obj,keys)=>{const k=Object.keys(obj).find(x=>keys.includes(norm(x)));return k?obj[k]:""};
+  const headerKey=s=>norm(s).replace(/[^a-z0-9]/g,"");
+  const pick=(obj,keys)=>{const wanted=keys.map(headerKey);const k=Object.keys(obj).find(x=>wanted.includes(headerKey(x)));return k?obj[k]:""};
   const setMsg=(t,kind="")=>{const el=$("quoteImportMessage");if(el){el.textContent=t;el.className="notice "+kind}};
   const aliases={product:["produto","item","descricao","descrição","nome do produto","produto/item"],price:["preco","preço","valor","preco unitario","preço unitário","valor unitario","valor unitário"],shipping:["frete","entrega","valor frete"],quantity:["quantidade","qtd","qtde"],notes:["observacao","observação","observacoes","observações","detalhes"]};
   const toNum=v=>{if(typeof v==="number")return v;let s=String(v??"").replace(/R\\$/gi,"").replace(/\\s/g,"");if(s.includes(","))s=s.replace(/\\./g,"").replace(",",".");const n=Number(s);return Number.isFinite(n)?n:NaN};
@@ -72,7 +73,16 @@
     if(f.size>10*1024*1024)return setMsg("O arquivo deve ter no máximo 10 MB.","error");
     try{
       const data=await f.arrayBuffer();const wb=XLSX.read(data,{type:"array"});const sheet=wb.Sheets[wb.SheetNames[0]];
-      const rows=XLSX.utils.sheet_to_json(sheet,{defval:"",raw:false});if(!rows.length)throw new Error("A primeira aba não contém linhas de dados.");
+      // Procura a linha real dos títulos, mesmo quando existem capas/instruções antes da tabela.
+      const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,defval:"",raw:false});
+      const headerIndex=matrix.findIndex(row=>{
+        const headers=row.map(headerKey);
+        return headers.some(h=>aliases.product.some(a=>headerKey(a)===h)) &&
+               headers.some(h=>aliases.price.some(a=>headerKey(a)===h));
+      });
+      if(headerIndex<0)throw new Error("Não encontrei os cabeçalhos Produto e Preço unitário. Use o modelo MFR ou confira os títulos das colunas.");
+      const rows=XLSX.utils.sheet_to_json(sheet,{range:headerIndex,defval:"",raw:false});
+      if(!rows.length)throw new Error("A aba foi encontrada, mas não há linhas de produtos abaixo do cabeçalho.");
       parsedRows=rows.map(row=>{
         const product=String(pick(row,aliases.product)||"").trim(),price=toNum(pick(row,aliases.price)),shipping=toNum(pick(row,aliases.shipping)||0),quantity=String(pick(row,aliases.quantity)||"").trim(),notes=String(pick(row,aliases.notes)||"").trim();
         const match=products.find(p=>norm(p.name)===norm(product));
