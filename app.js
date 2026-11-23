@@ -4,7 +4,7 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_nGJ-UEn8kzof785jGuKFCA_N3g1RZux
 const ADMIN_EMAIL = "xavofelipe@gmail.com";
 const $ = id => document.getElementById(id);
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-let currentUser=null, currentRole=null, isAdmin=false, products=[], prices=[], accessUsers=[], supplierProfiles=[], buyerRequests=[], requestOffers=[], serviceCategories=[], serviceProviders=[], serviceProviderCategories=[], serviceRequests=[], serviceReviews=[];
+let currentUser=null, currentRole=null, isAdmin=false, products=[], prices=[], accessUsers=[], supplierProfiles=[], buyerRequests=[], requestOffers=[], serviceCategories=[], serviceProviders=[], serviceProviderCategories=[], serviceRequests=[], serviceReviews=[], dbNotifications=[], notificationChannel=null;
 const money=n=>Number(n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const num=s=>{const v=String(s??"0").trim().replace(/\./g,"").replace(",",".");const n=Number(v);return Number.isFinite(n)?n:0};
@@ -140,16 +140,46 @@ function render(){
   document.querySelectorAll("[data-del-price]").forEach(b=>b.onclick=async()=>{if(!confirm("Excluir somente esta cotação? Os cadastros de produtos serão mantidos."))return;const {error}=await supabaseClient.from("prices").delete().eq("id",b.dataset.delPrice);if(error)return alert("Erro: "+error.message);await loadData()});
 }
 function buyerMode(){return currentRole==="comprador"&&!isAdmin}
+async function loadDatabaseNotifications(){
+  if(!currentUser)return;
+  const {data,error}=await supabaseClient.from("mfr_notifications").select("id,kind,title,body,target_tab,related_id,created_at,read_at").order("created_at",{ascending:false}).limit(30);
+  if(error){console.warn("Central de notificações:",error.message);return;}
+  dbNotifications=data||[];
+  renderNotifications();
+}
+function startNotificationRealtime(){
+  if(!currentUser)return;
+  if(notificationChannel)supabaseClient.removeChannel(notificationChannel);
+  notificationChannel=supabaseClient.channel("mfr-notifications-"+currentUser.id)
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"mfr_notifications",filter:"recipient_id=eq."+currentUser.id},payload=>{
+      dbNotifications=[payload.new,...dbNotifications].slice(0,30);
+      renderNotifications();
+      if("Notification" in window&&Notification.permission==="granted"&&document.visibilityState==="visible"){
+        try{new Notification(payload.new.title,{body:payload.new.body,icon:"./icon.svg"});}catch(_){}
+      }
+    }).subscribe();
+  loadDatabaseNotifications();
+}
+async function markMfrNotificationRead(id,target){
+  const {error}=await supabaseClient.from("mfr_notifications").update({read_at:new Date().toISOString()}).eq("id",id);
+  if(error)return alert("Não foi possível marcar como lida: "+error.message);
+  dbNotifications=dbNotifications.map(n=>n.id===id?{...n,read_at:new Date().toISOString()}:n);
+  renderNotifications();
+  if(target==="requests")tab("requests");
+  else if(target==="services")tab("services");
+}
 function renderNotifications(){
   const now=Date.now(),items=[];
+  dbNotifications.forEach(n=>items.push({id:n.id,title:n.title,detail:n.body,date:new Date(n.created_at).getTime(),read:!!n.read_at,target:n.target_tab}));
   if(currentRole==="comprador"){
-    prices.slice(0,5).forEach(q=>{const p=products.find(x=>x.id===q.product_id);items.push({title:"Cotação disponível: "+(p?.name||"Produto"),detail:"Fornecedor: "+q.store+" · Total com frete: "+money(total(q)),date:new Date(q.created_at).getTime()})});
+    prices.slice(0,5).forEach(q=>{const p=products.find(x=>x.id===q.product_id);items.push({title:"Cotação disponível: "+(p?.name||"Produto"),detail:"Fornecedor: "+q.store+" · Total com frete: "+money(total(q)),date:new Date(q.created_at).getTime(),read:true})});
   }else{
-    prices.filter(q=>q.created_by===currentUser?.id&&q.expires_at&&new Date(q.expires_at).getTime()-now<48*3600000).forEach(q=>{const p=products.find(x=>x.id===q.product_id);items.push({title:"Cotação próxima do vencimento: "+(p?.name||"Produto"),detail:"Validade: "+new Date(q.expires_at).toLocaleString("pt-BR"),date:new Date(q.expires_at).getTime()})});
-    if(!items.length)items.push({title:"Tudo em dia",detail:"Você receberá avisos aqui quando suas cotações estiverem próximas do vencimento.",date:now});
+    prices.filter(q=>q.created_by===currentUser?.id&&q.expires_at&&new Date(q.expires_at).getTime()-now<48*3600000).forEach(q=>{const p=products.find(x=>x.id===q.product_id);items.push({title:"Cotação próxima do vencimento: "+(p?.name||"Produto"),detail:"Validade: "+new Date(q.expires_at).toLocaleString("pt-BR"),date:new Date(q.expires_at).getTime(),read:true})});
   }
-  if(isAdmin){items.unshift({title:"Resumo administrativo atualizado",detail:accessUsers.length+" contas cadastradas · "+prices.length+" cotações visíveis.",date:now})}
-  $("notificationsList").innerHTML=items.length?items.sort((a,b)=>b.date-a.date).map(x=>'<div class="notification"><b>'+esc(x.title)+'</b><small>'+esc(x.detail)+'</small></div>').join(""):'<div class="empty">Nenhum aviso no momento.</div>';
+  if(isAdmin){items.unshift({title:"Resumo administrativo atualizado",detail:accessUsers.length+" contas cadastradas · "+prices.length+" cotações visíveis.",date:now,read:true})}
+  const sorted=items.sort((a,b)=>b.date-a.date);
+  $("notificationsList").innerHTML=sorted.length?sorted.map(x=>x.id?'<button type="button" class="notification mfr-notification '+(x.read?'is-read':'is-unread')+'" data-mfr-notification="'+esc(x.id)+'" data-target-tab="'+esc(x.target||"home")+'"><b>'+esc(x.title)+'</b><small>'+esc(x.detail)+'</small><small>'+(x.read?"Visualizada":"Nova · toque para abrir")+'</small></button>':'<div class="notification"><b>'+esc(x.title)+'</b><small>'+esc(x.detail)+'</small></div>').join(""):'<div class="empty">Nenhum aviso no momento.</div>';
+  document.querySelectorAll("[data-mfr-notification]").forEach(b=>b.onclick=()=>markMfrNotificationRead(b.dataset.mfrNotification,b.dataset.targetTab));
 }
 function renderReports(){
   if(!$("savingsReport"))return;
@@ -390,10 +420,18 @@ function renderServiceRequests(){
   document.querySelectorAll("[data-service-review]").forEach(form=>form.onsubmit=async e=>{
     e.preventDefault();
     const fd=new FormData(form);
-    const row={request_id:form.dataset.serviceReview,provider_id:form.dataset.provider,reviewer_id:currentUser.id,quality_rating:Number(fd.get("quality_rating")),punctuality_rating:Number(fd.get("punctuality_rating")),service_rating:Number(fd.get("service_rating")),cost_benefit_rating:Number(fd.get("cost_benefit_rating")),comment:String(fd.get("comment")||"").trim()||null};
-    const {error}=await supabaseClient.from("service_reviews").insert(row);
-    if(error)return alert("Não foi possível enviar a avaliação: "+error.message);
-    await loadServices();alert("Avaliação enviada! Obrigado por fortalecer a confiança na rede MFR.");
+    const button=form.querySelector('button[type="submit"]');button.disabled=true;button.textContent="ENVIANDO AVALIAÇÃO...";
+    const {error}=await supabaseClient.rpc("mfr_submit_service_review",{
+      p_request_id:form.dataset.serviceReview,
+      p_quality_rating:Number(fd.get("quality_rating")),
+      p_punctuality_rating:Number(fd.get("punctuality_rating")),
+      p_service_rating:Number(fd.get("service_rating")),
+      p_cost_benefit_rating:Number(fd.get("cost_benefit_rating")),
+      p_comment:String(fd.get("comment")||"").trim()||null
+    });
+    if(error){button.disabled=false;button.textContent="ENVIAR AVALIAÇÃO";return message("serviceRequestMessage","Não foi possível enviar a avaliação: "+error.message,"error");}
+    message("serviceRequestMessage","Avaliação registrada com sucesso! Obrigado por fortalecer a confiança na rede MFR.","success");
+    await loadServices();
   });
 }
 $("serviceCategoryFilter").addEventListener("change",renderServiceProviders);
@@ -433,11 +471,11 @@ async function checkSession(session){
   }
   currentRole=access.role;isAdmin=currentRole==="admin"&&currentUser.email.toLowerCase()===ADMIN_EMAIL;
   if(currentRole==="admin"&&!isAdmin){show("pendingView");message("pendingMessage","Conta administrativa sem autorização principal.","error");return}
-  allowedTabs();show("appView");tab("home");
-  try{await loadData();$("net").textContent="● Online"}catch(err){$("net").textContent="● Erro de conexão";alert("Erro ao carregar dados: "+err.message)}
+  allowedTabs();show("appView");tab("home");startNotificationRealtime();
+  try{await loadData();$("net").textContent="● Online";await loadDatabaseNotifications()}catch(err){$("net").textContent="● Erro de conexão";alert("Erro ao carregar dados: "+err.message)}
 }
 $("loginForm").addEventListener("submit",async e=>{e.preventDefault();const email=$("loginEmail").value.trim().toLowerCase(),password=$("loginPassword").value;message("authMessage","Verificando acesso...");const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});if(error)return message("authMessage","E-mail ou senha incorretos: "+error.message,"error");await checkSession(data.session)});
-async function signOut(){await supabaseClient.auth.signOut();currentUser=null;currentRole=null;isAdmin=false;show("loginView")}
+async function signOut(){if(notificationChannel){await supabaseClient.removeChannel(notificationChannel);notificationChannel=null}dbNotifications=[];await supabaseClient.auth.signOut();currentUser=null;currentRole=null;isAdmin=false;show("loginView")}
 $("signOut").addEventListener("click",signOut);$("pendingSignOut").addEventListener("click",signOut);
 $("net").textContent=navigator.onLine?"● Conectado":"● Offline";
 window.addEventListener("online",()=>$("net").textContent="● Conectado");
