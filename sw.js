@@ -1,4 +1,4 @@
-const CACHE = 'mfr-market-v20261117-fotos-produtos-2';
+const CACHE = 'mfr-market-v20261123-layout-categorias';
 const FILES = ['./', './index.html', './style.css', './app.js', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', event => {
