@@ -117,7 +117,9 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
 @media(max-width:620px){.user-live-wrap{width:100%;justify-content:space-between}.mfr-live-stats-header{gap:10px;padding:7px 9px}.mfr-live-stats-header b{font-size:13px}}
 
   </style>
-</head>
+<style id="mfr-discovery-styles">
+.mfr-discovery{margin:0 0 30px}.mfr-discovery-hero{min-height:220px;display:flex;align-items:center;overflow:hidden;border-radius:22px;background:linear-gradient(90deg,#09090df2 0%,#101015df 54%,#a40d2b8c),url("https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1400&q=75") center/cover;border:1px solid #58202c}.mfr-discovery-copy{padding:30px;max-width:700px}.mfr-discovery-copy>span{font-size:10px;font-weight:800;letter-spacing:.16em;color:#ff7186}.mfr-discovery-copy h3{font-size:clamp(24px,3vw,38px);line-height:1.12;margin:12px 0;color:white}.mfr-discovery-copy h3 em{color:#ff3959;font-style:normal}.mfr-discovery-copy p{color:#eee;margin:0}.mfr-quick-search{display:flex;gap:10px;align-items:center;position:relative;margin:-23px auto 27px;width:94%;padding:9px;background:#f7f7f9;border-radius:16px;box-shadow:0 12px 28px #0006}.mfr-quick-search input{margin:0;min-width:0;flex:1;background:#fff;color:#16161a;border:0;box-shadow:none}.mfr-quick-search button{background:#c90e2d;color:white;border:0;white-space:nowrap}.mfr-discovery-heading{font-size:22px!important;margin:27px 0 15px!important;color:#fff!important}.mfr-category-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.mfr-category-grid button{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;min-height:125px;background:#f8f8fa;color:#19191d;border:1px solid #e5e5e9;border-radius:17px;box-shadow:0 7px 16px #0003;text-align:center;font-weight:800;padding:13px;line-height:1.25}.mfr-category-grid button:hover,.mfr-category-grid button:focus-visible{background:#fff;border-color:#e32346;transform:translateY(-3px)}.mfr-category-grid button span{font-size:42px;line-height:1.1}.mfr-service-grid{grid-template-columns:repeat(3,minmax(0,1fr))}@media(min-width:1050px){.mfr-product-grid{grid-template-columns:repeat(6,minmax(0,1fr))}.mfr-service-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}@media(max-width:500px){.mfr-discovery-copy{padding:24px}.mfr-discovery-hero{min-height:260px}.mfr-category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mfr-category-grid button{min-height:108px;font-size:12px}.mfr-category-grid button span{font-size:34px}.mfr-quick-search{width:98%;gap:3px;padding:5px}.mfr-quick-search input{font-size:12px;padding:10px 7px}.mfr-quick-search button{padding:10px 9px;font-size:12px}}
+</style></head>
 <body>
   <section id="loginView" class="login-screen">
     <div class="login-visual">
@@ -198,7 +200,17 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
       <button id="adminTab" class="tab hidden" data-tab="admin">Administração</button>
     </nav>
     <main>
-      <section id="home" class="view">
+      <section id="home" class="view"><section class="mfr-discovery" aria-label="Explore categorias MFR Market">
+<div class="mfr-discovery-hero"><div class="mfr-discovery-copy"><span>MFR TECNOLOGIA &amp; E-COMMERCE</span><h3>Conectando <em>compradores</em>, fornecedores e prestadores de serviços</h3><p>Encontre produtos, compare cotações e descubra profissionais em um só lugar.</p></div></div>
+<form id="mfrQuickSearch" class="mfr-quick-search"><input id="mfrQuickTerm" type="search" aria-label="Buscar produtos ou serviços" placeholder="Busque produtos ou serviços (ex.: papel A4, pintura...)"><button type="submit">Pesquisar</button></form>
+<h3 class="mfr-discovery-heading">📦 Produtos</h3>
+<div class="mfr-category-grid mfr-product-grid">
+<button type="button" data-mfr-product="CARNE"><span>🥩</span>Carnes</button><button type="button" data-mfr-product="INSUMOS"><span>🌾</span>Insumos</button><button type="button" data-mfr-product="PAPELARIA"><span>✏️</span>Papelaria</button><button type="button" data-mfr-product="HIGIENE E LIMPEZA"><span>🧴</span>Higiene e Limpeza</button><button type="button" data-mfr-product="EMBALAGENS"><span>📦</span>Embalagens</button><button type="button" data-mfr-product=""><span>🛒</span>Todos os produtos</button>
+</div>
+<h3 class="mfr-discovery-heading">🛠️ Serviços</h3>
+<div class="mfr-category-grid mfr-service-grid">
+<button type="button" data-mfr-service="ar-condicionado"><span>❄️</span>Ar-condicionado</button><button type="button" data-mfr-service="veículo"><span>🚗</span>Veículos</button><button type="button" data-mfr-service="máquinas"><span>⚙️</span>Máquinas e equipamentos</button><button type="button" data-mfr-service="pintura"><span>🎨</span>Pintura</button><button type="button" data-mfr-service="alvenaria"><span>🧱</span>Construção</button><button type="button" data-mfr-service="drywall"><span>🏗️</span>Drywall</button><button type="button" data-mfr-service="hidráulica"><span>🚰</span>Hidráulica</button><button type="button" data-mfr-service="motoboy"><span>🛵</span>Motoboy</button><button type="button" data-mfr-service=""><span>➕</span>Todos os serviços</button>
+</div></section>
         <h2 id="homeTitle">Painel geral</h2>
         <div id="adminOverview" class="dashboard hidden"><article class="panel"><h3>Usuários autorizados</h3><strong id="metricUsers">0</strong></article><article class="panel"><h3>Compradores</h3><strong id="metricBuyers">0</strong></article><article class="panel"><h3>Fornecedores</h3><strong id="metricSuppliers">0</strong></article><article class="panel"><h3>Cotações ativas</h3><strong id="metricQuotes">0</strong></article></div>
         <section id="notificationsPanel" class="panel"><h3>Central de notificações</h3><div id="notificationsList">Carregando avisos...</div></section>
@@ -366,5 +378,24 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
   <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
   <script src="app.js?v=20261121-filtro-categoria-cotacoes"></script>
   <script src="quote-import.js?v=20261121-10"></script>
-</body>
+<script id="mfr-discovery-script">
+document.addEventListener("DOMContentLoaded",()=>{
+ const go=n=>{const b=document.querySelector('[data-tab="'+n+'"]');if(b&&!b.classList.contains("hidden"))b.click();};
+ document.querySelectorAll("[data-mfr-product]").forEach(b=>b.addEventListener("click",()=>{
+ const value=b.dataset.mfrProduct;const isBuyer=document.getElementById("productsTab")?.classList.contains("hidden");
+ const destination=isBuyer?"prices":"products";const filter=document.getElementById(isBuyer?"quoteCategoryFilter":"productCategoryFilter");
+ if(filter){filter.value=value;filter.dispatchEvent(new Event("change"))}go(destination);
+ }));
+ document.querySelectorAll("[data-mfr-service]").forEach(b=>b.addEventListener("click",()=>{
+ const term=b.dataset.mfrService;go("services");const search=document.getElementById("serviceSearch");const filter=document.getElementById("serviceCategoryFilter");
+ if(filter)filter.value="";if(search){search.value=term;search.dispatchEvent(new Event("input",{bubbles:true}))}
+ }));
+ document.getElementById("mfrQuickSearch")?.addEventListener("submit",e=>{
+ e.preventDefault();const term=document.getElementById("mfrQuickTerm").value.trim();const isBuyer=document.getElementById("productsTab")?.classList.contains("hidden");
+ const dest=isBuyer?"prices":"products";const search=document.getElementById(isBuyer?"quoteSearch":"productSearch");
+ const filter=document.getElementById(isBuyer?"quoteCategoryFilter":"productCategoryFilter");
+ if(filter){filter.value="";filter.dispatchEvent(new Event("change"))}if(search){search.value=term;search.dispatchEvent(new Event("input",{bubbles:true}))}go(dest);
+ });
+});
+</script></body>
 </html>
