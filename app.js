@@ -140,12 +140,60 @@ function render(){
   document.querySelectorAll("[data-del-price]").forEach(b=>b.onclick=async()=>{if(!confirm("Excluir somente esta cotação? Os cadastros de produtos serão mantidos."))return;const {error}=await supabaseClient.from("prices").delete().eq("id",b.dataset.delPrice);if(error)return alert("Erro: "+error.message);await loadData()});
 }
 function buyerMode(){return currentRole==="comprador"&&!isAdmin}
+const MFR_VAPID_PUBLIC_KEY="BEd6MTWdHfnCfg63j68d9b9YWTt9Ub35iJd4Xdtpg-vtvkeBdlTqn3P7LfPLJaaILWuPSKZ327bMd1etWsoOx0o";
+function mfrBase64UrlToBytes(value){
+  const padding="=".repeat((4-value.length%4)%4);
+  const base64=(value+padding).replace(/-/g,"+").replace(/_/g,"/");
+  const raw=atob(base64);
+  return Uint8Array.from(raw,c=>c.charCodeAt(0));
+}
+function ensurePushSetupButton(){
+  const panel=$("notificationsPanel");
+  if(!panel||$("mfrEnablePush"))return;
+  const button=document.createElement("button");
+  button.id="mfrEnablePush";button.type="button";button.className="secondary-button";
+  button.textContent="ATIVAR NOTIFICAÇÕES NO CELULAR";
+  button.addEventListener("click",async()=>{
+    if(!currentUser)return;
+    if(!("serviceWorker" in navigator)||!("PushManager" in window)||!("Notification" in window)){
+      return alert("Este navegador não oferece suporte a notificações push. No Android, abra o MFR Market pelo Chrome e instale na tela inicial.");
+    }
+    button.disabled=true;button.textContent="ATIVANDO...";
+    try{
+      const permission=await Notification.requestPermission();
+      if(permission!=="granted")throw new Error("Permissão de notificação não concedida. Ative nas configurações do navegador.");
+      const registration=await navigator.serviceWorker.register("./sw.js");
+      let subscription=await registration.pushManager.getSubscription();
+      if(!subscription)subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:mfrBase64UrlToBytes(MFR_VAPID_PUBLIC_KEY)});
+      const json=subscription.toJSON();
+      const row={user_id:currentUser.id,endpoint:json.endpoint,p256dh:json.keys?.p256dh,auth:json.keys?.auth,expiration_time:json.expirationTime||null,updated_at:new Date().toISOString()};
+      const {error}=await supabaseClient.from("mfr_push_subscriptions").upsert(row,{onConflict:"endpoint"});
+      if(error)throw error;
+      button.textContent="NOTIFICAÇÕES ATIVADAS NESTE APARELHO";
+      message("pushSetupMessage","Este aparelho está habilitado para receber avisos do MFR Market.","success");
+    }catch(err){
+      button.disabled=false;button.textContent="TENTAR ATIVAR NOTIFICAÇÕES";
+      message("pushSetupMessage","Não foi possível ativar: "+(err.message||err),"error");
+    }
+  });
+  const note=document.createElement("p");note.id="pushSetupMessage";note.className="notice";
+  panel.append(button,note);
+}
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.addEventListener("message",event=>{
+    if(event.data?.type==="MFR_NOTIFICATION_CLICK"){
+      const target=event.data.target_tab;
+      if(["requests","services"].includes(target))tab(target);
+    }
+  });
+}
 async function loadDatabaseNotifications(){
   if(!currentUser)return;
   const {data,error}=await supabaseClient.from("mfr_notifications").select("id,kind,title,body,target_tab,related_id,created_at,read_at").order("created_at",{ascending:false}).limit(30);
   if(error){console.warn("Central de notificações:",error.message);return;}
   dbNotifications=data||[];
   renderNotifications();
+  ensurePushSetupButton();
 }
 function startNotificationRealtime(){
   if(!currentUser)return;
