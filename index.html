@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=20261117-fotos-produtos-2">
+  <link rel="stylesheet" href="./style.css?v=20261124-busca-redesign-1">
   <style id="mfr-inline-fallback">
 :root{color-scheme:dark;--bg:#09090c;--surface:#17171c;--line:#303039;--text:#f7f7f8;--muted:#a5a5ae;--red:#c90e2d;--bright:#f02043;--dark:#76091e;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
 *{box-sizing:border-box}html{min-height:100%;scroll-behavior:smooth}body{margin:0;min-height:100vh;background:#0b0b0e;color:var(--text);font:15px/1.5 Inter,ui-sans-serif,system-ui,sans-serif}
@@ -129,10 +129,17 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
 .mfr-discovery-benefits{display:flex;flex-wrap:wrap;gap:9px;margin-top:20px}
 .mfr-discovery-benefits span{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid #ffffff38;border-radius:999px;background:#08090b99;color:#fff;font-size:11px;font-weight:750}
 .mfr-discovery-benefits b{color:#ff4966;font-size:14px}
-.mfr-quick-search{display:flex;gap:10px;align-items:center;position:relative;margin:-24px auto 30px;width:min(94%,980px);padding:9px;background:#fff;border:1px solid #e6e6e9;border-radius:16px;box-shadow:0 13px 30px #0007}
-.mfr-quick-search input{margin:0;min-width:0;flex:1;background:#fff;color:#17171b;border:0;box-shadow:none;padding:13px 14px}
-.mfr-quick-search input::placeholder{color:#777780}
-.mfr-quick-search button{background:linear-gradient(120deg,#ed2347,#a90d2c);color:#fff;border:0;border-radius:11px;white-space:nowrap;padding:12px 22px;font-weight:850}
+.mfr-quick-search{display:flex;align-items:center;gap:10px;position:relative;margin:-24px auto 30px;width:min(94%,1060px);padding:8px 9px 8px 15px;background:linear-gradient(180deg,#fff,#f5f5f7);border:1px solid #f1b9c3;border-radius:999px;box-shadow:0 12px 30px #0007,0 0 0 5px #e51d4020;transition:box-shadow .2s,border-color .2s}
+.mfr-quick-search:focus-within{border-color:#ed3150;box-shadow:0 12px 32px #0008,0 0 0 5px #e51d4030}
+.mfr-search-field{display:flex;align-items:center;gap:15px;flex:1;min-width:0;padding:0 14px}
+.mfr-search-icon{width:27px;height:27px;flex:0 0 27px;fill:none;stroke:#17171b;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.mfr-quick-search input{display:block;width:100%;min-width:0;min-height:54px;margin:0;padding:10px 0;background:transparent!important;color:#17171b!important;border:0!important;border-radius:0!important;box-shadow:none!important;font-size:clamp(14px,1.6vw,17px)}
+.mfr-quick-search input::placeholder{color:#777780;opacity:1}
+.mfr-quick-search input:focus{outline:0;box-shadow:none}
+.mfr-quick-search button{display:inline-flex;align-items:center;justify-content:center;gap:11px;min-height:54px;min-width:205px;padding:12px 25px;background:linear-gradient(120deg,#f02043,#ad092b);color:#fff;border:0;border-radius:999px;white-space:nowrap;font-size:16px;font-weight:850;box-shadow:0 7px 17px #c7193244;transition:filter .2s,transform .2s}
+.mfr-quick-search button:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.mfr-quick-search button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:560px){.mfr-quick-search{width:100%;gap:6px;padding:6px 7px 6px 10px;margin:-18px auto 25px;border-radius:22px}.mfr-search-field{gap:8px;padding:0 5px}.mfr-search-icon{width:21px;height:21px;flex-basis:21px}.mfr-quick-search input{min-height:48px;font-size:12px}.mfr-quick-search button{min-width:0;min-height:48px;gap:6px;padding:10px 13px;font-size:13px}.mfr-quick-search button svg{width:18px;height:18px}}
 .mfr-discovery-section{margin:0 0 27px}
 .mfr-discovery-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 2px 13px}
 .mfr-discovery-heading{display:flex;align-items:center;gap:11px;font-size:23px!important;margin:0!important;color:#fff!important;font-weight:900;letter-spacing:-.035em}
@@ -232,7 +239,13 @@ input,select,textarea{display:block;width:100%;min-height:46px;margin-top:6px;pa
     <main>
       <section id="home" class="view"><section class="mfr-discovery" aria-label="Explore categorias MFR Market">
 <div class="mfr-discovery-hero"><div class="mfr-discovery-copy"><span>MFR TECNOLOGIA &amp; E-COMMERCE</span><h3>Conectando <em>compradores</em>, fornecedores e prestadores de serviços</h3><p>Encontre produtos, compare cotações e descubra profissionais em um só lugar.</p><div class="mfr-discovery-benefits"><span><b>✓</b> Cotações rápidas</span><span><b>✓</b> Mais oportunidades</span><span><b>✓</b> Negociação direta</span></div></div></div>
-<form id="mfrQuickSearch" class="mfr-quick-search"><input id="mfrQuickTerm" type="search" aria-label="Buscar produtos ou serviços" placeholder="Busque produtos ou serviços (ex.: papel A4, carne, pintura...)"><button type="submit">⌕ Pesquisar</button></form>
+<form id="mfrQuickSearch" class="mfr-quick-search" role="search">
+  <div class="mfr-search-field">
+    <svg class="mfr-search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path></svg>
+    <input id="mfrQuickTerm" type="search" aria-label="Buscar produtos ou serviços" placeholder="Busque por produto, serviço ou categoria...">
+  </div>
+  <button type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path></svg><span>Pesquisar</span></button>
+</form>
 <section class="mfr-discovery-section" aria-label="Categorias de produtos"><div class="mfr-discovery-section-head"><h3 class="mfr-discovery-heading"><span class="mfr-section-symbol">▣</span>Produtos</h3><button class="mfr-see-all" type="button" data-mfr-product="">Ver todos os produtos →</button></div>
 <div class="mfr-category-grid mfr-product-grid">
 <button type="button" data-mfr-product="CARNE"><span>🥩</span>Carnes</button><button type="button" data-mfr-product="INSUMOS"><span>🌾</span>Insumos</button><button type="button" data-mfr-product="PAPELARIA"><span>✏️</span>Papelaria</button><button type="button" data-mfr-product="HIGIENE E LIMPEZA"><span>🧴</span>Higiene e Limpeza</button><button type="button" data-mfr-product="EMBALAGENS"><span>📦</span>Embalagens</button><button type="button" data-mfr-product=""><span>🛒</span>Outros produtos</button>
